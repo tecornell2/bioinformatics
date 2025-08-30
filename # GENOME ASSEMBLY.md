@@ -17,7 +17,8 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 ### HiFi raw data
   ```sh
   # concat hifi reads from different runs into a single file
-  cat Nfasc-CLP0000_WGS_blood_hifi-1.fastq.gz Nfasc-CLP0000_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP0000_WGS_blood_hifi_v2.fastq.gz
+  cat Nfasc-CLP0000_WGS_blood_hifi-1.fastq.gz Nfasc-CLP0000_WGS_blood_hifi-2.fastq.gz >
+   Nfasc-CLP0000_WGS_blood_hifi_v2.fastq.gz
   ```
 
 ### Hi-C raw data
@@ -58,7 +59,8 @@ hifiasm requires input reads in FASTQ format
 
 **Hi-C integration**
 ```sh 
-hifiasm -o 0000_assembled_blood_DoubleHiC -t 50 --h1 0000_HiC_combined_R1.fq.gz --h2 0000_HiC_combined_R2.fq.gz CLP0000_HiFi_reads.fastq.gz
+hifiasm -o 0000_assembled_blood_DoubleHiC -t 50 --h1 0000_HiC_combined_R1.fq.gz --h2 0000_HiC_combined_R2.fq.gz
+ CLP0000_HiFi_reads.fastq.gz
 ```
 
 #### hifiasm Outputs
@@ -151,7 +153,8 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
   cd /project/viper/venom/Taryn/species/sample/03_BUSCO
 
   # Run BUSCO on genome
-  busco -i Nclar-CLP0000_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/user/busco_downloads/lineages/tetrapoda_odb12 -c 50 -o 03_BUSCO
+  busco -i Nclar-CLP0000_assembled_blood.bp.p_ctg.fasta  -m genome
+   -l /home/user/busco_downloads/lineages/tetrapoda_odb12 -c 50 -o 03_BUSCO
 ```
 
 Documentation: https://busco.ezlab.org/ 
@@ -194,5 +197,6 @@ Documentation: https://busco.ezlab.org/
 Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
 
 ## 5. Annotation [funannotate]
+
 
 
