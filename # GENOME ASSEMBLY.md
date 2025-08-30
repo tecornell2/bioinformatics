@@ -17,14 +17,14 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 ### HiFi raw data
   ```sh
   # concat hifi reads from different runs into a single file
-  cat Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz
+  cat Nfasc-CLP0000_WGS_blood_hifi-1.fastq.gz Nfasc-CLP0000_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP0000_WGS_blood_hifi_v2.fastq.gz
   ```
 
 ### Hi-C raw data
   ```sh
   #concat HiC R1s (forward) and the R2s (reverse) into a single file
-  cat 1832_HiC_S1_R1_Run1_val_1.fq.gz Parkinson_S2_R1_001_val_1.fq.gz > 1832_HiC_combined_R1.fq.gz
-  cat 1832_HiC_S1_R2_Run1_val_2.fq.gz Parkinson_S2_R2_001_val_2.fq.gz > 1832_HiC_combined_R2.fq.gz
+  cat 0000_HiC_S1_R1_Run1_val_1.fq.gz S2_R1_001_val_1.fq.gz > 0000_HiC_combined_R1.fq.gz
+  cat 0000_HiC_S1_R2_Run1_val_2.fq.gz S2_R2_001_val_2.fq.gz > 0000_HiC_combined_R2.fq.gz
   ```
 
 ## 2. Assembly [hifiasm]
@@ -32,24 +32,24 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 #### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name 02_hifiiasm_Nclar
-#SBATCH --output 02_hifiasm_Nclar_output
+#SBATCH --job-name 02_hifiasm
+#SBATCH --output 02_hifiasm_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 40
-#SBATCH --mem 260gb
+#SBATCH --mem 00gb
 #SBATCH --time 24:00:00
 #SBATCH --mail-type ALL
-#SBATCH --mail-user tecorn@clemson.edu
+#SBATCH --mail-user
 
   module load anaconda3/2023.09-0
   source activate hifiasm
 
-  cd /project/viper/venom/Taryn/Nerodia/Nclarkii/02_hifiasm
-  hifiasm -o Nclar-CLP2810_assembled_blood -t 40 Nclar-CLP2810_WGS_blood_hifi_v2.fastq.gz
+  cd /project/viper/venom/Taryn/species/sample/02_hifiasm
+  hifiasm -o Nclar-CLP0000_assembled_blood -t 40 Nclar-CLP0000_WGS_blood_hifi_v2.fastq.gz
     
   # converts output .bp.p_ctg.gfa file from hifiasm to .fasta file for next steps
-  awk '/^S/{print ">"$2;print $3}' Nclar-CLP2810_assembled_blood.bp.p_ctg.gfa > Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta
+  awk '/^S/{print ">"$2;print $3}' Nclar-CLP0000_assembled_blood.bp.p_ctg.gfa > Nclar-CLP0000_assembled_blood.bp.p_ctg.fasta
 ```
 
 hifiasm requires input reads in FASTQ format
@@ -58,7 +58,7 @@ hifiasm requires input reads in FASTQ format
 
 **Hi-C integration**
 ```sh 
-hifiasm -o 1832_assembled_blood_DoubleHiC -t 50 --h1 1832_HiC_combined_R1.fq.gz --h2 1832_HiC_combined_R2.fq.gz CLP1832_HiFi_reads.fastq.gz
+hifiasm -o 0000_assembled_blood_DoubleHiC -t 50 --h1 0000_HiC_combined_R1.fq.gz --h2 0000_HiC_combined_R2.fq.gz CLP0000_HiFi_reads.fastq.gz
 ```
 
 #### hifiasm Outputs
@@ -74,7 +74,7 @@ Resource: https://hifiasm.readthedocs.io/en/latest/interpreting-output.html
 Run basic statistics on assmebly (N50) prior to next step.
 
 ```sh
-bbstats.sh in=Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta out=Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta.stats.txt Xmx64g
+bbstats.sh in=Nclar-CLP0000_assembled_blood.bp.p_ctg.fasta out=Nclar-CLP0000_assembled_blood.bp.p_ctg.fasta.stats.txt Xmx64g
 ```
 
 <details><summary> bbstats .txt output file</summary>
@@ -133,25 +133,25 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 #### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name 03_BUSCO_Nclar
-#SBATCH --output 03_BUSCO_Nclar_output
+#SBATCH --job-name 03_BUSCO
+#SBATCH --output 03_BUSCO_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 50
-#SBATCH --mem 256gb
-#SBATCH --time 72:00:00
+#SBATCH --mem 00gb
+#SBATCH --time 00:00:00
 #SBATCH --mail-type ALL
-#SBATCH --mail-user tecorn@clemson.edu
+#SBATCH --mail-user
 
   module load anaconda3/2023.09-0
   # activate conda environment busco
   source activate busco
 
   # change to directory with genome file
-  cd /project/viper/venom/Taryn/Nerodia/Nclarkii/03_BUSCO
+  cd /project/viper/venom/Taryn/species/sample/03_BUSCO
 
   # Run BUSCO on genome
-  busco -i Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c 80 -o 03_BUSCO
+  busco -i Nclar-CLP0000_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/user/busco_downloads/lineages/tetrapoda_odb12 -c 50 -o 03_BUSCO
 ```
 
 Documentation: https://busco.ezlab.org/ 
@@ -168,24 +168,23 @@ Documentation: https://busco.ezlab.org/
 ### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name 04_EDTA_Nclar
-#SBATCH --output 04_EDTA_Nclar_output
+#SBATCH --job-name 04_EDTA
+#SBATCH --output 04_EDTA_output
 #SBATCH --nodes 1
-#SBATCH --partition nodeviper
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 24
-#SBATCH --mem 256gb
-#SBATCH --time 72:00:00
+#SBATCH --mem 000gb
+#SBATCH --time 00:00:00
 #SBATCH --mail-type ALL
-#SBATCH --mail-user tecorn@clemson.edu
+#SBATCH --mail-user
 
  module load anaconda3/2023.09-0
  source activate edta
 
- cd /project/viper/venom/Taryn/Nerodia/04_EDTA
+ cd /project/viper/venom/Taryn/species/04_EDTA
 
- perl /home/tecorn/.conda/envs/edta/share/EDTA/EDTA.pl \
- --genome ../turtle_genome.fa \
+ perl /home/user/.conda/envs/edta/share/EDTA/EDTA.pl \
+ --genome ../genome.fa \
  --species others \
  --step all \
  --sensitive 1 \
@@ -195,4 +194,5 @@ Documentation: https://busco.ezlab.org/
 Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
 
 ## 5. Annotation [funannotate]
+
 
