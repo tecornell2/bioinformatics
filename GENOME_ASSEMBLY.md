@@ -111,7 +111,7 @@ Length          Scaffolds       Contigs         Length          Length          
 
 Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 
-## 4. Quality of Assembly [BUSCO]
+## 3. Quality of Assembly [BUSCO]
 
 #### .job file
 ```sh
@@ -143,7 +143,7 @@ Documentation: https://busco.ezlab.org/
 # GENOME ANNOTATION
 <information>
 
-## 7. Transposable Element Annotation and Repeat Masking [EDTA]
+## 4. Transposable Element Annotation and Repeat Masking [EDTA]
 Extensive De-novo TE Annotator (EDTA) performs RepeatModeler/RepeatMasker
 
 ### .job file
@@ -238,7 +238,7 @@ Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
 https://www.repeatmasker.org/ 
 
 ---
-### Soft Masking [RepeatMasker]
+### 4.1 Soft Masking [RepeatMasker]
 
 #### .job file
 ```sh
@@ -262,9 +262,9 @@ lib = library input file\
 pa = parallel mode\
 xsmall = masks repeats in the input genome sequence using soft-masking\
 
-## 8. Annotation [funannotate]
+## 5. Annotation [funannotate]
 
-### 8.1 Training
+### 5.1 Training
 
 ### .job file
 ```sh
@@ -294,11 +294,11 @@ apptainer exec \
 
 ```
 
-### 8.2 Prediction
+### 5.2 Prediction
 
-### 8.3 Update
+### 5.3 Update
 
-### 8.4 Functional Annotation
+### 5.4 Functional Annotation
 
 #### .job file
 ```sh
@@ -348,7 +348,8 @@ $FUNANNOTATE_DB:/funannotate_db \
     --signalp $SIGNALP \
     --cpus 24
 ```
-## 9. Cleaning 
+## 6. Cleaning 
+
 
 
 
