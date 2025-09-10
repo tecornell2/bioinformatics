@@ -261,11 +261,24 @@ Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file \ https://www
 ### 7.1 Soft Masking [RepeatMasker]
 
 ```sh
+#!/bin/bash
+#SBATCH --job-name 07_RepeatMask_Nfasc
+#SBATCH --output 07_RepeatMask_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 256gb
+#SBATCH --time 24:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
 
+ module load anaconda3/2023.09-0
+ source activate edta
 
-RepeatMasker -pa 24 -e ncbi -lib turtle_genome.fa.mod.EDTA.TElib.fa \
-  -dir ./EDTA_out \
-  -gff -xsmall turtle_genome.fa
+ cd /project/viper/venom/Taryn/Nerodia/Nfasciata/04_EDTA
+
+ RepeatMasker -pa 24 -e ncbi -lib Nfasc-CLP2811_genome.fasta.mod.EDTA.TElib.fa \
+  -gff -xsmall Nfasc-CLP2811_genome.fasta
 ```
 lib = library input file
 pa = parallel mode
@@ -294,6 +307,7 @@ xsmall = masks repeats in the input genome sequence using soft-masking
 ```
 
 ## 9. Cleaning 
+
 
 
 
