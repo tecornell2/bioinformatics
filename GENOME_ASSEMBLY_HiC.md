@@ -252,16 +252,17 @@ Extensive De-novo TE Annotator (EDTA) performs RepeatModeler/RepeatMasker
  --force 1 \
  --threads 40
 ```
-force [0|1] Use rice TEs to continue when no confident TE candidates are found (1)
-sensitive [0|1]	Use RepeatModeler to identify remaining TEs (1)
-overwrite [0|1] Use to overwrite previous steps (files) produced by EDTA (default, 0)
-Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
-https://www.repeatmasker.org/ 
+force [0|1] Use rice TEs to continue when no confident TE candidates are found (1)\
+sensitive [0|1]	Use RepeatModeler to identify remaining TEs (1)\
+overwrite [0|1] Use to overwrite previous steps (files) produced by EDTA (default, 0)\
+Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file \ https://www.repeatmasker.org/ 
 
 ---
 ### 7.1 Soft Masking [RepeatMasker]
 
 ```sh
+
+
 RepeatMasker -pa 24 -e ncbi -lib turtle_genome.fa.mod.EDTA.TElib.fa \
   -dir ./EDTA_out \
   -gff -xsmall turtle_genome.fa
@@ -293,6 +294,7 @@ xsmall = masks repeats in the input genome sequence using soft-masking
 ```
 
 ## 9. Cleaning 
+
 
 
 
