@@ -4,16 +4,7 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 
 ## 0. Raw Data (PacBio HiFi reads)
 
-### File Types
-| abbrev    | type                        |
-|-----------|-----------------------------|
-| .fasta    | Fast-All                    |
-| .fastq    |                             |
-| .gfa      | Graphical Fragment Assembly |
-| .gz       |                             |
-
-
-## 0.1 Concatenate 
+## 1. Concatenate 
 
 ### HiFi raw data
   ```sh
@@ -358,4 +349,5 @@ $FUNANNOTATE_DB:/funannotate_db \
     --cpus 24
 ```
 ## 9. Cleaning 
+
 
