@@ -186,9 +186,8 @@ Extensive De-novo TE Annotator (EDTA) performs RepeatModeler/RepeatMasker
 force [0|1] Use rice TEs to continue when no confident TE candidates are found (1)
 sensitive [0|1]	Use RepeatModeler to identify remaining TEs (1)
 overwrite [0|1] Use to overwrite previous steps (files) produced by EDTA (default, 0)
-
-#### Output
-<details><summary>EDTA output file</summary>
+\
+<details><summary>EDTA .txt output file</summary>
 
 ```sh
 Repeat Classes
@@ -242,6 +241,7 @@ Total Sequences: 818
 Total Length: 1869125421 bp
 
 ```
+[concatenated]
 </details>
 Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
 https://www.repeatmasker.org/ 
@@ -249,6 +249,7 @@ https://www.repeatmasker.org/
 ---
 ### Soft Masking [RepeatMasker]
 
+#### .job file
 ```sh
 #!/bin/bash
 #SBATCH --job-name 05_EDTA_Nclar
@@ -273,13 +274,88 @@ xsmall = masks repeats in the input genome sequence using soft-masking\
 ## 8. Annotation [funannotate]
 
 ### 8.1 Training
+
 ### .job file
 ```sh
+#!/bin/bash
+
+#SBATCH --job-name 06_1_funannotate_Nclar
+#SBATCH --output 06_1_funannotate_Nclar_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 256gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+apptainer exec \
+    --bind /project/viper/venom/Taryn/bin:/opt/tools,/project/viper/venom/Taryn/Nerodia/06_funannotate:/data \
+    /project/viper/venom/Taryn/Nerodia/06_funannotate/funannotate_latest.sif \
+    funannotate train \
+        -i /data/NclarCLP-2810_genome.fasta.masked \
+        -o /data/funannotate_train_output \
+        --left /data/Gjapo-CLP2966_RNA_Blood_R1_trim.fastq.gz \
+        --right /data/Gjapo-CLP2966_RNA_Blood_R2_trim.fastq.gz \
+        --max_intronlen 30000 \
+        --cpus 24
+
 ```
 
-### 8.2
+### 8.2 Prediction
 
-### 8.3
+### 8.3 Update
 
+### 8.4 Functional Annotation
 
+#### .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name 06_4_funannotate_Nclar
+#SBATCH --output 06_4_funannotate_Nclar_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 356gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+module load java/11.0.2
+
+# Paths
+FUNANNOTATE_CONTAINER=/project/viper/venom/Taryn/Nerodia/Nclarkii/06_funannotate/funannotate_latest.sif
+FUNANNOTATE_DB=/home/tecorn/Databases/funannotate_databases
+TOOLS=/project/viper/venom/Taryn/bin
+PREDICT_OUTPUT=/project/viper/venom/Taryn/Nerodia/Nclarkii/06_funannotate/06_2_predict
+ANNOTATE_OUTPUT=/project/viper/venom/Taryn/Nerodia/Nclarkii/06_funannotate/06_4_annotate
+
+# External results
+EGGNOG=/project/viper/venom/Taryn/Nerodia/Nclarkii/06_Funannotate/funannotate_predict_output/predict_results/emapper.emapper.annotations
+IPRSCAN=/project/viper/venom/Taryn/Nerodia/Nclarkii/06_Funannotate/interproscan_output/Geoemyda_japonica_iprscan.tsv
+SIGNALP=/project/viper/venom/Taryn/Nerodia/Nclarkii/06_Funannotate/signalp_output/Geoemyda_japonica_summary.signalp5
+
+# Make sure annotate output directory exists
+mkdir -p $ANNOTATE_OUTPUT
+
+# Run annotation
+apptainer exec \
+  --bind $TOOLS:/opt/tools,\
+$PREDICT_OUTPUT:/data/predictions,\
+$ANNOTATE_OUTPUT:/data/funannotate_annotate_output,\
+$FUNANNOTATE_DB:/funannotate_db \
+  --env FUNANNOTATE_DB=/funannotate_db \
+  $FUNANNOTATE_CONTAINER \
+  funannotate annotate \
+    -i /data/predictions \
+    -o /data/funannotate_annotate_output \
+    --species "Nerodia clarkii" \
+    --eggnog $EGGNOG \
+    --iprscan $IPRSCAN \
+    --signalp $SIGNALP \
+    --cpus 24
+```
 ## 9. Cleaning 
+
