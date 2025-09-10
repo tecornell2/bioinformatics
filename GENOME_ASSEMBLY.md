@@ -4,18 +4,19 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 
 ## 0. Raw Data (PacBio HiFi reads)
 
-## 1. Concatenate 
+## 1. Data Preparation 
 
-### HiFi raw data
+### 1.1 Concatenate
+#### HiFi raw data
   ```sh
   # concat hifi reads from different runs into a single file
   cat Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz
   ```
 
-## 2. Trim [Trim Galore!] <optional>
+### 1.2 Trim [Trim Galore!]
 Documentation: https://github.com/FelixKrueger/TrimGalore
 
-## 3. Assembly [hifiasm]
+## 2. Assembly [hifiasm]
 
 #### .job file
 ```sh
@@ -52,8 +53,7 @@ hifiasm requires input reads in FASTQ format
 
 Resource: https://hifiasm.readthedocs.io/en/latest/interpreting-output.html 
 
----
-### Stats on Assembly [bbstats]
+2.1 Stats on Assembly [bbstats]
 Run basic statistics on assmebly (N50) prior to next step.
 
 ```sh
@@ -349,5 +349,6 @@ $FUNANNOTATE_DB:/funannotate_db \
     --cpus 24
 ```
 ## 9. Cleaning 
+
 
 
