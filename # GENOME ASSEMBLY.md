@@ -18,7 +18,7 @@ The following pipeline is a general pipeline for PacBio HiFi genome assembly wit
   cat 1832_HiC_S1_R1_Run1_val_1.fq.gz Parkinson_S2_R1_001_val_1.fq.gz > 1832_HiC_combined_R1.fq.gz
   cat 1832_HiC_S1_R2_Run1_val_2.fq.gz Parkinson_S2_R2_001_val_2.fq.gz > 1832_HiC_combined_R2.fq.gz
   ```
-### 1.2 Quality Check [Nanoplot]
+### 1.2 Quality Check [Nanoplot] (https://github.com/wdecoster/NanoPlot)
 
 ## 2. Trim [Trim Galore!]
 Documentation: https://github.com/FelixKrueger/TrimGalore
@@ -293,4 +293,5 @@ xsmall = masks repeats in the input genome sequence using soft-masking
 ```
 
 ## 9. Cleaning 
+
 
