@@ -12,7 +12,8 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 | .gfa      | Graphical Fragment Assembly |
 | .gz       |                             |
 
-## 1. Concatenate 
+
+## 0.1 Concatenate 
 
 ### HiFi raw data
   ```sh
@@ -20,14 +21,7 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
   cat Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz
   ```
 
-### Hi-C raw data
-  ```sh
-  #concat HiC R1s (forward) and the R2s (reverse) into a single file
-  cat 1832_HiC_S1_R1_Run1_val_1.fq.gz Parkinson_S2_R1_001_val_1.fq.gz > 1832_HiC_combined_R1.fq.gz
-  cat 1832_HiC_S1_R2_Run1_val_2.fq.gz Parkinson_S2_R2_001_val_2.fq.gz > 1832_HiC_combined_R2.fq.gz
-  ```
-
-## 2. Trim [Trim Galore!]
+## 2. Trim [Trim Galore!] <optional>
 Documentation: https://github.com/FelixKrueger/TrimGalore
 
 ## 3. Assembly [hifiasm]
@@ -58,11 +52,6 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
 hifiasm requires input reads in FASTQ format
 -t sets the number of CPUs
 -o sets the output file prefix, *do not include suffixes*
-
-**Hi-C integration**
-```sh 
-hifiasm -o 1832_assembled_blood_DoubleHiC -t 50 --h1 1832_HiC_combined_R1.fq.gz --h2 1832_HiC_combined_R2.fq.gz CLP1832_HiFi_reads.fastq.gz
-```
 
 #### hifiasm Outputs
 1. Primary contigs (bp.p_ctg.gfa)
@@ -159,75 +148,6 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 
 Documentation: https://busco.ezlab.org/ 
 
-## 5. Align and Index [BWA+MEM] [samtools]
-
-#### .job file
-```sh
-#!/bin/bash
-#SBATCH --job-name=bwa_turtle_hic_align
-#SBATCH --output=bwa_turtle_hic_align_output
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 50
-#SBATCH --mem 240gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-  module load anaconda3/2023.09-0
-  source activate yahs_env
-
-  cd /project/viper/venom/John_Henry/Turtle
-  # Define variables
-  THREADS=50
-  READ1="turtle_S4_R1_001_val_1.fq.gz"
-  READ2="turtle_S4_R2_001_val_2.fq.gz"
-  GENOME="Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta"
-  OUT_BAM="turtle_hic_algn.bam"
-  SORTED_BAM="turtle_hic_algn_sorted.bam"
-
-  # Index genome if needed
-  if [ ! -f "${GENOME}.bwt" ]; then
-      echo "[INFO] Indexing genome with BWA..."
-      bwa index $GENOME
-  fi
-
-  # Run BWA-MEM and process with samtools
-  bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
-      samtools view -@ $THREADS -b -h -F 2316 - | \
-      samtools sort -@ $THREADS -o $SORTED_BAM
-
-  # Index the sorted BAM
-  samtools index $SORTED_BAM
-```
-
-## 6. Scaffolding [YaHs]
-
-Input file type required: .fai
-Run:
-```sh
-samtools faidx Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta
-```
-
-#### .job file
-```sh
-#!/bin/bash
-#SBATCH --job-name Yahs
-#SBATCH --output Yahs_output
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 50
-#SBATCH --mem 240gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-module load anaconda3/2023.09-0
-source activate yahs_env
-
-/project/viper/venom/John_Henry/Turtle
-yahs Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta turtle_hic_algn_sorted.bam
-```
 
 # GENOME ANNOTATION
 <information>
@@ -266,6 +186,63 @@ Extensive De-novo TE Annotator (EDTA) performs RepeatModeler/RepeatMasker
 force [0|1] Use rice TEs to continue when no confident TE candidates are found (1)
 sensitive [0|1]	Use RepeatModeler to identify remaining TEs (1)
 overwrite [0|1] Use to overwrite previous steps (files) produced by EDTA (default, 0)
+
+#### Output
+<details><summary>EDTA output file</summary>
+
+```sh
+Repeat Classes
+==============
+Total Sequences: 818
+Total Length: 1869125421 bp
+Class                  Count        bpMasked    %masked
+=====                  =====        ========     =======
+LINE                   --           --           --   
+    CR1                507180       145848654    7.80% 
+    I                  1438         1685270      0.09% 
+    Jockey             71510        10406728     0.56% 
+    L1                 106504       71958335     3.85% 
+    L2                 121256       94359993     5.05% 
+    R4                 38377        20381725     1.09% 
+    RTE                68143        22012823     1.18% 
+    Rex                43671        16118414     0.86% 
+    unknown            93137        20445522     1.09% 
+LTR                    --           --           --   
+    Bel_Pao            922          342281       0.02% 
+    Copia              2104         1624158      0.09% 
+    Gypsy              90251        51742929     2.77% 
+    Retrovirus         13526        5432366      0.29% 
+    unknown            381683       135374110    7.24% 
+SINE                   --           --           --   
+    MIR                48465        8247873      0.44% 
+TIR                    --           --           --   
+    CACTA              104699       23411162     1.25% 
+    Mutator            60853        12893056     0.69% 
+    PIF_Harbinger      34957        6241495      0.33% 
+    Sola               98           22357        0.00% 
+    Tc1_Mariner        17743        4424369      0.24% 
+    hAT                393445       89318664     4.78% 
+    polinton           858          1205364      0.06% 
+nonLTR                 --           --           --   
+    DIRS_YR            1385         475764       0.03% 
+    Penelope           71888        15420535     0.83% 
+nonTIR                 --           --           --   
+    helitron           305769       78207949     4.18% 
+repeat_fragment        228664       58572821     3.13% 
+                      ---------------------------------
+    total interspersed 2808526      896174717    47.95%
+
+snRNA                  94           25595        0.00% 
+---------------------------------------------------------
+Total                  2808620      896200312    47.95%
+
+Repeat Stats
+============
+Total Sequences: 818
+Total Length: 1869125421 bp
+
+```
+</details>
 Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
 https://www.repeatmasker.org/ 
 
@@ -273,13 +250,25 @@ https://www.repeatmasker.org/
 ### Soft Masking [RepeatMasker]
 
 ```sh
-RepeatMasker -pa 24 -e ncbi -lib turtle_genome.fa.mod.EDTA.TElib.fa \
-  -dir ./EDTA_out \
-  -gff -xsmall turtle_genome.fa
+#!/bin/bash
+#SBATCH --job-name 05_EDTA_Nclar
+#SBATCH --output 04_EDTA_Nclar_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 256gb
+#SBATCH --time 24:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+cd /project/viper/venom/Taryn/Nerodia/Nclarkii/04_EDTA
+
+RepeatMasker -pa 24 -e ncbi -lib Nclar-CLP2810_genome.fasta.mod.EDTA.TElib.fa \
+  -gff -xsmall Nclar-CLP2810_genome.fasta
 ```
-lib = library input file
-pa = parallel mode
-xsmall = masks repeats in the input genome sequence using soft-masking
+lib = library input file\
+pa = parallel mode\
+xsmall = masks repeats in the input genome sequence using soft-masking\
 
 ## 8. Annotation [funannotate]
 
@@ -291,5 +280,6 @@ xsmall = masks repeats in the input genome sequence using soft-masking
 ### 8.2
 
 ### 8.3
+
 
 ## 9. Cleaning 
