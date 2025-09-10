@@ -1,22 +1,14 @@
 # GENOME ASSEMBLY
 
-The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (https://github.com/RhettRautsaw/Bioinformatics/blob/master/tutorials/HiFi_Genomics.md) and notes from PhD candidate John Henry.
+The following pipeline is a general pipeline for PacBio HiFi genome assembly with HiC integration. It is heavily based on a free tutorial from Rhett Rautsaw (https://github.com/RhettRautsaw/Bioinformatics/blob/master/tutorials/HiFi_Genomics.md) and notes from PhD candidate John Henry.
 
-## 0. Raw Data (PacBio HiFi reads)
+## 1. Raw Data
 
-### File Types
-| abbrev    | type                        |
-|-----------|-----------------------------|
-| .fasta    | Fast-All                    |
-| .fastq    |                             |
-| .gfa      | Graphical Fragment Assembly |
-| .gz       |                             |
-
-## 1. Concatenate 
+### 1.1 Concatenate 
 
 ### HiFi raw data
   ```sh
-  # concat hifi reads from different runs into a single file
+  # concat hifi reads from different runs into a single file if needed
   cat Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz
   ```
 
@@ -49,7 +41,7 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
   source activate hifiasm
 
   cd /project/viper/venom/Taryn/Nerodia/Nclarkii/02_hifiasm
-  hifiasm -o Nclar-CLP2810_assembled_blood -t 40 Nclar-CLP2810_WGS_blood_hifi_v2.fastq.gz
+  hifiasm -o 1832_assembled_blood_DoubleHiC -t 50 --h1 1832_HiC_combined_R1.fq.gz --h2 1832_HiC_combined_R2.fq.gz CLP1832_HiFi_reads.fastq.gz
     
   # converts output .bp.p_ctg.gfa file from hifiasm to .fasta file for next steps
   awk '/^S/{print ">"$2;print $3}' Nclar-CLP2810_assembled_blood.bp.p_ctg.gfa > Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta
@@ -58,11 +50,6 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
 hifiasm requires input reads in FASTQ format
 -t sets the number of CPUs
 -o sets the output file prefix, *do not include suffixes*
-
-**Hi-C integration**
-```sh 
-hifiasm -o 1832_assembled_blood_DoubleHiC -t 50 --h1 1832_HiC_combined_R1.fq.gz --h2 1832_HiC_combined_R2.fq.gz CLP1832_HiFi_reads.fastq.gz
-```
 
 #### hifiasm Outputs
 1. Primary contigs (bp.p_ctg.gfa)
@@ -73,7 +60,7 @@ hifiasm -o 1832_assembled_blood_DoubleHiC -t 50 --h1 1832_HiC_combined_R1.fq.gz 
 Resource: https://hifiasm.readthedocs.io/en/latest/interpreting-output.html 
 
 ---
-### Stats on Assembly [bbstats]
+### 3.1 Stats on Assembly [bbstats]
 Run basic statistics on assmebly (N50) prior to next step.
 
 ```sh
@@ -201,13 +188,14 @@ Documentation: https://busco.ezlab.org/
   samtools index $SORTED_BAM
 ```
 
-## 6. Scaffolding [YaHs]
-
-Input file type required: .fai
+### 5.1 File type conversion
+Input file type required for scaffolding: .fai
 Run:
 ```sh
 samtools faidx Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta
 ```
+
+## 6. Scaffolding [YaHs]
 
 #### .job file
 ```sh
@@ -270,7 +258,7 @@ Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
 https://www.repeatmasker.org/ 
 
 ---
-### Soft Masking [RepeatMasker]
+### 7.1 Soft Masking [RepeatMasker]
 
 ```sh
 RepeatMasker -pa 24 -e ncbi -lib turtle_genome.fa.mod.EDTA.TElib.fa \
@@ -284,12 +272,23 @@ xsmall = masks repeats in the input genome sequence using soft-masking
 ## 8. Annotation [funannotate]
 
 ### 8.1 Training
-### .job file
+#### .job file
 ```sh
 ```
 
-### 8.2
+### 8.2 Prediction
+#### .job file
+```sh
+```
 
-### 8.3
+### 8.3 Updating
+#### .job file
+```sh
+```
+
+### 8.4 Annotation
+#### .job file
+```sh
+```
 
 ## 9. Cleaning 
