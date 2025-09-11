@@ -264,7 +264,7 @@ xsmall = masks repeats in the input genome sequence using soft-masking\
 
 #### Check soft-masking output
 ```sh
-# input this code into an interactive node to print the percentage of lowercase nucleotides (pct_masked) in the output
+# input this code into an interactive node to print the percentage of lowercase nucleotides (pct_masked)
 # must be in the correct directory with the output .masked file
 awk 'BEGIN{uc=lc=0} /^>/ {next} {
     for(i=1;i<=length($0);i++){
@@ -281,8 +281,8 @@ awk 'BEGIN{uc=lc=0} /^>/ {next} {
 ```sh
 #!/bin/bash
 
-#SBATCH --job-name 06_1_funannotate_Nclar
-#SBATCH --output 06_1_funannotate_Nclar_output
+#SBATCH --job-name 06_1_funannotate_Nfasc
+#SBATCH --output 06_1_funannotate_Nfasc_output
 #SBATCH --nodes 1
 #SBATCH --partition nodeviper
 #SBATCH --ntasks-per-node 1
@@ -360,6 +360,7 @@ $FUNANNOTATE_DB:/funannotate_db \
     --cpus 24
 ```
 ## 6. Cleaning 
+
 
 
 
