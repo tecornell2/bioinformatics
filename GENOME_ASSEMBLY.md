@@ -232,7 +232,7 @@ Total Sequences: 818
 Total Length: 1869125421 bp
 
 ```
-[concatenated]
+**concatenated output**
 </details>
 Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
 https://www.repeatmasker.org/ 
@@ -261,6 +261,17 @@ RepeatMasker -pa 24 -e ncbi -lib Nclar-CLP2810_genome.fasta.mod.EDTA.TElib.fa \
 lib = library input file\
 pa = parallel mode\
 xsmall = masks repeats in the input genome sequence using soft-masking\
+
+#### Check soft-masking output
+```sh
+# input this code into an interactive node to print the percentage of lowercase nucleotides (pct_masked) in the output
+# must be in the correct directory with the output .masked file
+awk 'BEGIN{uc=lc=0} /^>/ {next} {
+    for(i=1;i<=length($0);i++){
+        c=substr($0,i,1); if(c~/[A-Z]/) uc++; else if(c~/[a-z]/) lc++;
+    }
+} END{printf "upper: %d\nlower: %d\npct_masked: %.2f\n", uc, lc, lc/(uc+lc)*100}' Nclar-CLP2810_genome.fasta.masked
+```
 
 ## 5. Annotation [funannotate]
 
@@ -349,6 +360,7 @@ $FUNANNOTATE_DB:/funannotate_db \
     --cpus 24
 ```
 ## 6. Cleaning 
+
 
 
 
