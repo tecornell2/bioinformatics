@@ -281,27 +281,27 @@ awk 'BEGIN{uc=lc=0} /^>/ {next} {
 ```sh
 #!/bin/bash
 
-#SBATCH --job-name 06_1_funannotate_Nfasc
-#SBATCH --output 06_1_funannotate_Nfasc_output
+#SBATCH --job-name 06_1_funannotate_Nclar
+#SBATCH --output 06_1_funannotate_Nclar_output
 #SBATCH --nodes 1
-#SBATCH --partition nodeviper
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
+#SBATCH --cpus-per-task 54
 #SBATCH --mem 256gb
 #SBATCH --time 72:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
 apptainer exec \
-    --bind /project/viper/venom/Taryn/bin:/opt/tools,/project/viper/venom/Taryn/Nerodia/06_funannotate:/data \
-    /project/viper/venom/Taryn/Nerodia/06_funannotate/funannotate_latest.sif \
+    --bind /project/viper/venom/Taryn/bin:/opt/tools,/project/viper/venom/Taryn/Nerodia/Nclarkii/06_funannotate:/data \
+    /project/viper/venom/Taryn/Nerodia/Nclarkii/06_funannotate/funannotate_latest.sif \
     funannotate train \
-        -i /data/NclarCLP-2810_genome.fasta.masked \
-        -o /data/funannotate_train_output \
-        --left /data/Gjapo-CLP2966_RNA_Blood_R1_trim.fastq.gz \
-        --right /data/Gjapo-CLP2966_RNA_Blood_R2_trim.fastq.gz \
+        -i /data/Nclar-CLP2810_genome.fasta.masked \
+        -o /data/01_train_output \
+        --left ./RNA/Nclar-CLP2810_RNA_heart_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_kidney_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_liver_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_pancreas_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_SmIntest_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_stomach_R1_trim.fastq.gz \
+        --right ./RNA/Nclar-CLP2810_RNA_heart_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_kidney_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_liver_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_pancreas_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_SmIntest_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_stomach_R2_trim.fastq.gz \
+        --no_trimmomatic \
         --max_intronlen 30000 \
-        --cpus 24
+        --cpus 54
 
 ```
 
@@ -360,6 +360,7 @@ $FUNANNOTATE_DB:/funannotate_db \
     --cpus 24
 ```
 ## 6. Cleaning 
+
 
 
 
