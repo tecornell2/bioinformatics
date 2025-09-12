@@ -297,8 +297,8 @@ apptainer exec \
     funannotate train \
         -i /data/Nclar-CLP2810_genome.fasta.masked \
         -o /data/01_train_output \
-        --left ./RNA/Nclar-CLP2810_RNA_heart_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_kidney_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_liver_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_pancreas_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_SmIntest_R1_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_stomach_R1_trim.fastq.gz \
-        --right ./RNA/Nclar-CLP2810_RNA_heart_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_kidney_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_liver_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_pancreas_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_SmIntest_R2_trim.fastq.gz ./RNA/Nclar-CLP2810_RNA_stomach_R2_trim.fastq.gz \
+        --left /data/RNA/Nclar-CLP2810_RNA_heart_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_kidney_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_liver_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_pancreas_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_SmIntest_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_stomach_R1_trim.fastq.gz \
+        --right /data/RNA/Nclar-CLP2810_RNA_heart_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_kidney_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_liver_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_pancreas_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_SmIntest_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_stomach_R2_trim.fastq.gz \
         --no_trimmomatic \
         --max_intronlen 30000 \
         --cpus 54
@@ -360,6 +360,7 @@ $FUNANNOTATE_DB:/funannotate_db \
     --cpus 24
 ```
 ## 6. Cleaning 
+
 
 
 
