@@ -362,7 +362,13 @@ $FUNANNOTATE_DB:/funannotate_db \
 ## 6. Cleaning 
 
 
+---
 
+```sh
+./blobtools2/blobtools create \
+    --fasta /project/viper/venom/Taryn/Nerodia/Nclarkii/04_EDTA/Nclar-CLP2810_genome.fasta \
+    Nclarkii
+```
 
 
 
