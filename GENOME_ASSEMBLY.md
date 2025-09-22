@@ -285,7 +285,7 @@ awk 'BEGIN{uc=lc=0} /^>/ {next} {
 #SBATCH --output 06_1_funannotate_Nclar_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 54
+#SBATCH --cpus-per-task 24
 #SBATCH --mem 256gb
 #SBATCH --time 72:00:00
 #SBATCH --mail-type ALL
@@ -301,11 +301,37 @@ apptainer exec \
         --right /data/RNA/Nclar-CLP2810_RNA_heart_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_kidney_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_liver_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_pancreas_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_SmIntest_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_stomach_R2_trim.fastq.gz \
         --no_trimmomatic \
         --max_intronlen 30000 \
-        --cpus 54
+        --cpus 24
 
 ```
 
 ### 5.2 Prediction
+```sh
+#!/bin/bash
+
+#SBATCH --job-name 06_2_funannotate_Nclar
+#SBATCH --output 06_2_funannotate_Nclar_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 256gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+
+apptainer exec \
+    --bind /project/viper/venom/Taryn/bin:/opt/tools,/project/viper/venom/Taryn/Nerodia/Nclarkii/06_funannotate:/data \
+    /project/viper/venom/Taryn/Nerodia/Nclarkii/06_funannotate/funannotate_latest.sif \
+    funannotate predict \
+        -i /data/Nclar-CLP2810_genome.fasta.masked \
+        -o /data/02_predict_output \
+        --species "Nerodia clarkii" \
+        --rna_bam /data/01_train_output/training/funannotate_train.coordSorted.bam \
+        --transcript_evidence /data/01_train_output/training/funannotate_train.pasa.gff3 \
+        --cpus 24
+```
 
 ### 5.3 Update
 
@@ -369,6 +395,7 @@ $FUNANNOTATE_DB:/funannotate_db \
     --fasta /project/viper/venom/Taryn/Nerodia/Nclarkii/04_EDTA/Nclar-CLP2810_genome.fasta \
     Nclarkii
 ```
+
 
 
 
