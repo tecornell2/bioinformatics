@@ -333,7 +333,91 @@ apptainer exec \
         --cpus 24
 ```
 
+#### Run Eggnog Mapper, SignalP and InterProScan seperately
+
+```sh
+#!/bin/bash
+#SBATCH --job-name 06_eggnog_Nfasc
+#SBATCH --output 06_eggnog_Nfsac_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 100gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate eggnog
+
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate/02_predict_output/predict_results
+
+python /project/viper/venom/Taryn/bin/eggnog-mapper/emapper.py -i Nerodia_fasciata.proteins.fa -o emapper --cpu 24
+```
+```sh
+#!/bin/bash
+#SBATCH --job-name=SignalP_Nfasc
+#SBATCH --output=SignalP_Nfasc_output
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=100gb
+#SBATCH --time=48:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=tecorn@clemson.edu
+
+INPUT=/project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate/02_predict_output/predict_results/Nerodia_fasciata.proteins.fa
+OUTDIR=/project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate/signalp_output
+PREFIX=Nerodia_fasciata
+
+mkdir -p $OUTDIR
+cd /project/viper/venom/Taryn/bin/signalp/signalp5/bin || { echo "cd failed"; exit 1; }
+
+# Run SignalP
+./signalp \
+  -fasta $INPUT \
+  -org euk \
+  -format short \
+  -prefix $OUTDIR/$PREFIX
+```
+
+```sh
+#!/bin/bash
+#SBATCH --job-name=InterPro_Nfasc
+#SBATCH --output=InterPro_Nfasc_output
+#SBATCH --error=InterPro_error
+#SBATCH --nodes=1
+#SBATCH --partition=nodeviper
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=370gb
+#SBATCH --time=120:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=tecorn@clemson.edu
+
+# Load Java (required by InterProScan)
+module load java/11.0.2
+
+INTERPROSCAN=/home/johnhen/Databases/funannotate_databases/interproscan-5.75-106.0/interproscan.sh
+INPUT=/project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate/02_predict_output/predict_results/Nerodia_fasciata.proteins.fa
+OUTDIR=/project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate/interpro_output
+
+mkdir -p $OUTDIR
+
+$INTERPROSCAN \
+  -i $INPUT \
+  -f XML,GFF3,TSV \
+  -dp \
+  -cpu 24 \
+  -appl Pfam,SMART,TIGRFAM,CDD \
+  -iprlookup \
+  -goterms \
+```
+
 ### 5.3 Update
+
+
 
 ### 5.4 Functional Annotation
 
@@ -395,6 +479,7 @@ $FUNANNOTATE_DB:/funannotate_db \
     --fasta /project/viper/venom/Taryn/Nerodia/Nclarkii/04_EDTA/Nclar-CLP2810_genome.fasta \
     Nclarkii
 ```
+
 
 
 
