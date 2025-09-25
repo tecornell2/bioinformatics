@@ -480,7 +480,13 @@ $FUNANNOTATE_DB:/funannotate_db \
     Nclarkii
 ```
 
-
+```sh
+-c /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/pasa/annotCompare.txt \
+--PASACONF /home/ramsesr/.conda/envs/funannotate_env/opt/pasa-2.5.2/pasa_conf/conf.txt \
+-g /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/genome.fa \
+-t /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/trinity.fasta.clean -A -L --CPU 50 \
+--annots /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/pasa/Agkistrodon_piscivorus_pasa.gene_structures_post_PASA_updates.880002.gff3 &> pasa-comparison2.5.log
+```
 
 
 
