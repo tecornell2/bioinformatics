@@ -346,14 +346,14 @@ apptainer exec \
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
+# training folder from 01_training_output must be added to 02_predict_output to access both 01 and 02 outputs for 03_update
 apptainer exec \
     --bind /project/viper/venom/Taryn/bin:/opt/tools,/project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate:/data \
     /project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate/funannotate_latest.sif \
     funannotate update \
-      -i /data/Nfasc-CLP2811_genome.fasta.masked \
+      -i /data/02_predict_output \
       -o /data/03_update_output \
       --cpus 16 \
-      --species "Nerodia fasciata" \
       --pasa_db mysql
 ```
 
@@ -508,6 +508,7 @@ $FUNANNOTATE_DB:/funannotate_db \
 -t /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/trinity.fasta.clean -A -L --CPU 50 \
 --annots /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/pasa/Agkistrodon_piscivorus_pasa.gene_structures_post_PASA_updates.880002.gff3 &> pasa-comparison2.5.log
 ```
+
 
 
 
