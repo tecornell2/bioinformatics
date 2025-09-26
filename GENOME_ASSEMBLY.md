@@ -333,6 +333,33 @@ apptainer exec \
         --cpus 24
 ```
 
+### 5.3 Update
+
+```sh
+#SBATCH --job-name 06_3_funannotate_Nfasc
+#SBATCH --output 06_3_funannotate_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 16
+#SBATCH --mem 156gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+apptainer exec \
+    --bind /project/viper/venom/Taryn/bin:/opt/tools,/project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate:/data \
+    /project/viper/venom/Taryn/Nerodia/Nfasciata/06_funannotate/funannotate_latest.sif \
+    funannotate update \
+      -i /data/Nfasc-CLP2811_genome.fasta.masked \
+      -o /data/03_update_output \
+      --cpus 16 \
+      --species "Nerodia fasciata" \
+      --pasa_db mysql
+```
+
+### 5.4 Functional Annotation
+
+
 #### Run Eggnog Mapper, SignalP and InterProScan seperately
 
 ```sh
@@ -415,12 +442,6 @@ $INTERPROSCAN \
   -goterms \
 ```
 
-### 5.3 Update
-
-
-
-### 5.4 Functional Annotation
-
 #### .job file
 ```sh
 #!/bin/bash
@@ -487,6 +508,7 @@ $FUNANNOTATE_DB:/funannotate_db \
 -t /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/trinity.fasta.clean -A -L --CPU 50 \
 --annots /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/pasa/Agkistrodon_piscivorus_pasa.gene_structures_post_PASA_updates.880002.gff3 &> pasa-comparison2.5.log
 ```
+
 
 
 
