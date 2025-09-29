@@ -76,7 +76,7 @@ Resource for altering bash prompt: https://robotmoon.com/bash-prompt-generator/ 
  # create environment (ex. assembly environmnet) to save packages (hifiasm)
  # the addition of mamba loads mamba while creating the environment
  conda create -n hifiasm mamba
- conda activate hifiasm
+ source activate hifiasm
  mamba install -c bioconda hifiasm
 ```
 
@@ -84,29 +84,30 @@ Resource for altering bash prompt: https://robotmoon.com/bash-prompt-generator/ 
  module load anaconda3/2023.09
  # create enviornment for BBMap (includes bbstats, samtools)
  conda create -n bbmap mamba
- conda activate bbmap
+ source activate bbmap
  mamba install -c bioconda bbmap
 ```
 
 ```sh
 conda create -n edta mamba
-conda activate edta
+source activate edta
 mamba install -c conda-forge -c bioconda edta
 ```
 
 ```sh
 conda create -n blobtools2 mamba
-conda activate blobtools2
+source activate blobtools2
 mamba install -c conda-forge docopt pyyaml ujson tqdm nodejs -c bioconda pysam seqtk 
 ```
 
 ```sh
 conda create -n pasa mamba
-conda activate pasa
+source activate pasa
 mamba install -c bioconda pasa
 ```
 
 ## funannotate
 use an Apptainer
+
 
 
