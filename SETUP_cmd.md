@@ -100,6 +100,13 @@ conda activate blobtools2
 mamba install -c conda-forge docopt pyyaml ujson tqdm nodejs -c bioconda pysam seqtk 
 ```
 
+```sh
+conda create -n pasa mamba
+conda activate pasa
+mamba install -c bioconda pasa
+```
+
 ## funannotate
 use an Apptainer
+
 
