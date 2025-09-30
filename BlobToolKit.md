@@ -1,7 +1,7 @@
 #### blobtoolkit 
 
 
-#### set-up
+### set-up
 ```sh
 # create anaconda environment
 module load anaconda3/2023.09-0
@@ -20,7 +20,7 @@ chmod 755 blobtoolkit-*
 # api and viewer must be in the directory immediately outside of the data set
 ```
 
-#### create directory
+### create directory
 ```sh
 # create directory
 conda activate blob
