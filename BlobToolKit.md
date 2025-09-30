@@ -1,7 +1,7 @@
-#### blobtoolkit 
+### blobtoolkit 
 
 
-### set-up
+#### set-up
 ```sh
 # create anaconda environment
 module load anaconda3/2023.09-0
@@ -20,7 +20,7 @@ chmod 755 blobtoolkit-*
 # api and viewer must be in the directory immediately outside of the data set
 ```
 
-### create directory
+#### create directory
 ```sh
 # create directory
 conda activate blob
@@ -30,7 +30,7 @@ blobtools create --fasta Nerodia_clarkii.fasta --meta Nerodia_clarkii.yaml --tax
 blobtools add --busco /project/viper/venom/Taryn/Nerodia/Nclarkii/03_BUSCO/03_BUSCO_output/run_tetrapoda_odb12/full_table.tsv Nerodia_clarkii
 ```
 
-### run viewer and api
+#### run viewer and api
 ```sh
 # open 3 terminal windows, all on the login node
 # first terminal launches api
