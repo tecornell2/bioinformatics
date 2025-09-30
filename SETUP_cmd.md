@@ -95,9 +95,9 @@ mamba install -c conda-forge -c bioconda edta
 ```
 
 ```sh
-conda create -n blobtools2 mamba
-source activate blobtools2
-mamba install -c conda-forge docopt pyyaml ujson tqdm nodejs -c bioconda pysam seqtk 
+conda create -n blob
+source activate blob
+pip install blobtoolkit[full] 
 ```
 
 ```sh
@@ -108,6 +108,7 @@ mamba install -c bioconda pasa
 
 ## funannotate
 use an Apptainer
+
 
 
 
