@@ -7,8 +7,7 @@
 module load anaconda3/2023.09-0
 conda create -n blob
 conda activate blob
-
-  pip install blobtoolkit[full]
+pip install blobtoolkit[full]
 
 # fetch api and viewer binaries
 RELEASE=4.1.5
