@@ -31,7 +31,7 @@ blobtools add --busco /project/viper/venom/Taryn/Nerodia/Nclarkii/03_BUSCO/03_BU
 
 #### run viewer and api
 ```sh
-# open 3 terminal windows, all on the login node
+# open 3 terminal windows, first 2 on the login node
 # first terminal launches api
 BTK_API_PORT=8880 BTK_PORT=8881 BTK_FILE_PATH=/home/user/blobtoolkit/datasets ./blobtoolkit-api
 
