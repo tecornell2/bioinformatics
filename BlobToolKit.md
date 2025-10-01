@@ -39,7 +39,7 @@ BTK_API_PORT=8880 BTK_PORT=8881 BTK_FILE_PATH=$(pwd) ./blobtoolkit-api
 BTK_API_PORT=8880 BTK_PORT=8881 ./blobtoolkit-viewer
 
 # third terminal for remote access
-ssh -L 8881:localhost:8881 -L 8880:localhost:8880 tecorn@slogin.palmetto.clemson.edu
+ssh -L 8880:localhost:8880 -L 8881:localhost:8881 tecorn@slogin.palmetto.clemson.edu
 # login to HPC
 ```
 
