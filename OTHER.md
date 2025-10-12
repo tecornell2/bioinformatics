@@ -10,7 +10,7 @@ name | type | note
 #### MiniMap2 alignment
 ```sh
 # download ncbi genome to align to
-wget -O ThaEle.zip 'https://api.ncbi.nlm.nih.gov/datasets/v2/genome/accession/GCF_009769535.1/download?include_annotation_type=GENOME_FASTA'
+wget -O ThaEle.zip '{API URL}'
 unzip ThaEle.zip
 # rename .fna to .fa
 ```
@@ -18,18 +18,19 @@ unzip ThaEle.zip
 ```sh
 #!/bin/bash
 
-#SBATCH --job-name synt_Nclar_Tele
-#SBATCH --output synt_Nclar_Tele_output
+#SBATCH --job-name synt_Nfasc_Tele
+#SBATCH --output synt_Nfasc_Tele_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 16
-#SBATCH --mem 156gb
-#SBATCH --time 72:00:00
+#SBATCH --cpus-per-task 10
+#SBATCH --mem 106gb
+#SBATCH --time 12:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
 cd /project/viper/venom/Taryn/Nerodia/Synt
-minimap2 -ax asm20 Thamnophis_elegans/ThaEle.pri_genomic.fa Nerodia_clarkii.fa > Nfasc_Teleg_aln.sam       # assembly to assembly/ref alignment
+# assembly to assembly/ref alignment
+minimap2 -ax asm20 Thamnophis_elegans/ThaEle.pri_genomic.fa Nerodia_fasciata.fa > Nfasc_Teleg_aln.pfa.gz
 ```
 ---
 #### SRA tools loop for .fastq data
