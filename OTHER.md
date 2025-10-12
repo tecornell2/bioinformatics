@@ -16,6 +16,18 @@ unzip ThaEle.zip
 ```
 
 ```sh
+#!/bin/bash
+
+#SBATCH --job-name synt_Nclar_Tele
+#SBATCH --output synt_Nclar_Tele_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 16
+#SBATCH --mem 156gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
 cd /project/viper/venom/Taryn/Nerodia/Synt
 minimap2 -ax asm20 Thamnophis_elegans/ThaEle.pri_genomic.fa Nerodia_clarkii.fa > Nfasc_Teleg_aln.sam       # assembly to assembly/ref alignment
 ```
