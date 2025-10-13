@@ -106,8 +106,15 @@ source activate pasa
 mamba install -c bioconda pasa
 ```
 
+```sh
+conda create -n eggnog mamba
+source activate eggnog
+mamba install -c bioconda eggnog-mapper
+```
+
 ## funannotate
 use an Apptainer
+
 
 
 
