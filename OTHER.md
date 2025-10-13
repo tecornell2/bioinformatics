@@ -45,3 +45,9 @@ for i in *
   do fasterq-dump $i
 done
 ```
+---
+#### perl
+```sh
+# find and replace
+perl -pi -e 's/old/new/g' <file_name
+```
