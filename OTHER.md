@@ -49,5 +49,5 @@ done
 #### perl
 ```sh
 # find and replace
-perl -pi -e 's/old/new/g' <file_name
+perl -pi -e 's/old/new/g' <file_name>
 ```
