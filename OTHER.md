@@ -23,14 +23,20 @@ unzip ThaEle.zip
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 10
-#SBATCH --mem 106gb
-#SBATCH --time 12:00:00
+#SBATCH --mem 64gb
+#SBATCH --time 6:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
 cd /project/viper/venom/Taryn/Nerodia/Synt
-# assembly to assembly/ref alignment
-minimap2 -ax asm20 Thamnophis_elegans/ThaEle.pri_genomic.fa Nerodia_fasciata.fa > Nfasc_Teleg_aln.pfa.gz
+
+module load anaconda3/2023.09-0
+source activate minimap2
+minimap2 -ax asm20 Thamnophis_elegans/ThaEle.pri_genomic.fa Nerodia_fasciata.fa > Nfasc_Teleg_aln.sam
+conda deactivate
+
+source activate bbmap
+samtools fasta Nclar_Tele_aln.sam > Nclar_Tele_aln.pfa
 ```
 ---
 #### SRA tools loop for .fastq data
