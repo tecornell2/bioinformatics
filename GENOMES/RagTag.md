@@ -1,5 +1,7 @@
 ## RagTag
 
+Use RagTag to scaffold a drafted genome with a closely related reference genome. 
+
 #### .job file
 ```sh
 #!/bin/bash
