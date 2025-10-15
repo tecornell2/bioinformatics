@@ -32,11 +32,9 @@ cd /project/viper/venom/Taryn/Nerodia/Synt
 
 module load anaconda3/2023.09-0
 source activate minimap2
-minimap2 -ax asm20 Thamnophis_elegans/ThaEle.pri_genomic.fa Nerodia_fasciata.fa > Nfasc_Teleg_aln.sam
+minimap2 -x asm10 Nerodia_clarkii.fa Nerodia_fasciata.fa > Nclar_Nfasc_aln.pfa
 conda deactivate
 
-source activate bbmap
-samtools fasta Nclar_Tele_aln.sam > Nclar_Tele_aln.pfa
 ```
 ---
 #### SRA tools loop for .fastq data
