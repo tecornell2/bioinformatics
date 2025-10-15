@@ -7,8 +7,10 @@ bioinformatics
 │		├── SnailPlot
 │		└── SyntenyPlot
 │
-└── GENOMES
-		├── HiFi
-		└── Hi-C
-
+├── GENOMES
+│		├── HiFi
+│		└── Hi-C
+│
+├── OTHER
+└── SETUP_cmd
 ```
