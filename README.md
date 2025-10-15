@@ -5,10 +5,10 @@ bioinformatics
 │
 ├── FIGURES
 │		├── SnailPlot
-│		├── SyntenyPlot
+│		└── SyntenyPlot
 │
 └── GENOMES
 		├── HiFi
-		├── Hi-C
+		└── Hi-C
 
 ```
