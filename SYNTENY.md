@@ -25,5 +25,5 @@ module load anaconda3/2023.09-0
 source activate minimap2
 minimap2 -x asm10 Nerodia_clarkii.fa Nerodia_fasciata.fa > Nclar_Nfasc_aln.pfa
 conda deactivate
-
 ```
+---
