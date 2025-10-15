@@ -1,7 +1,8 @@
 # bioinformatics
 
 ```sh
-bioinformatics repository
+bioinformatics
+│
 ├── FIGURES
 │		├── SnailPlot
 │		├── SyntenyPlot
