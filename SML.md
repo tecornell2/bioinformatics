@@ -4,15 +4,10 @@
 nextRAD libraries 
 cut sequence: GTGTAGAGCC
 
-de novo reference genome
-> ref_skink.fasta
-SNP data
-> skink.vcf
+de novo reference genome: ref_skink.fasta
+SNP data: skink.vcf
 
-### 01_inputs
-
-
-#### easySFS
+### 01_easySFS
 
 sh'''
 #set up
@@ -23,8 +18,9 @@ cd easySFS
 chmod 777 easySFS.py
 
 #step 1
-./easySFS.py -i skink.vcf -p pops_file.txt --preview
+./easySFS.py -i skink.vcf -p Pegre_id_pop_2018.txt --preview
 
 #step2
+./easySFS.py -i input.vcf -p pops_file.txt --proj 12,20
 '''
 
