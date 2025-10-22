@@ -20,7 +20,7 @@ bcftools sort skink_filtered_sorted.vcf -0z -o
 bcftools index -t skink_filtered_sorted.vcf 
 ```
 
-### 01_easySFS
+### easySFS
 
 ```sh
 # set up
