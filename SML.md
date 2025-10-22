@@ -7,6 +7,19 @@ cut sequence: GTGTAGAGCC
 de novo reference genome: ref_skink.fasta
 SNP data: skink.vcf
 
+#### filtering
+```sh
+module load vcftools
+
+vcftools --vcf skink.vcf --remove-indels --maf 0.05 --max-missing 0.9 \
+--recode --stout | zip -c > skink_filtered.vcf
+```
+
+```sh
+bcftools sort skink_filtered_sorted.vcf -0z -o
+bcftools index -t skink_filtered_sorted.vcf 
+```
+
 ### 01_easySFS
 
 ```sh
@@ -25,7 +38,7 @@ chmod 777 easySFS.py
 ```
 
 ---
-sNMF
+### sNMF
 snmf estimates admixture coefficients using sparse Non-Negative Matrix Factorization algorithms
 ```sh
 test
