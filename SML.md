@@ -16,8 +16,11 @@ vcftools --vcf skink.vcf --remove-indels --maf 0.05 --max-missing 0.9 \
 ```
 
 ```sh
-bcftools sort skink_filtered_sorted.vcf -Oz -o
-bcftools index -t skink_filtered_sorted.vcf 
+module load bcftools
+
+bcftools sort skink_filtered.vcf.gz -Oz -o skink_filtered_sorted.vcf.gz 
+bcftools view -S Pegre_id_2018.txt skink_filtered_sorted.vcf.gz > skink_filtered_sorted_subset.vcf.gz
+bcftools index -t skink_filtered_sorted_subset.vcf
 ```
 
 ### easySFS
