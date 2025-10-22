@@ -23,8 +23,10 @@ chmod 777 easySFS.py
 # step2
 ~/easySFS/easySFS.py -i skink.vcf -p Pegre_id_pop_2018.txt --proj 20,20
 ```
+
 ---
 sNMF
 snmf estimates admixture coefficients using sparse Non-Negative Matrix Factorization algorithms
 ```sh
+test
 ```
