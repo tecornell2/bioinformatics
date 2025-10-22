@@ -23,15 +23,11 @@ bcftools view -S Pegre_id_2018.txt skink_filtered_sorted.vcf.gz > skink_filtered
 bcftools index -t skink_filtered_sorted_subset.vcf
 ```
 ### sNMF
+snmf estimates admixture coefficients using sparse Non-Negative Matrix Factorization algorithms
 ```sh
 conda create -n LEA
 # load R and R package LEA and argsparser
 source activate LEA
-Rscript sNML
-```
-
-snmf estimates admixture coefficients using sparse Non-Negative Matrix Factorization algorithms
-```sh
 Rscript sNMF_model2.1.R skink_filtered_sorted_subset.vcf 7
 ```
 
