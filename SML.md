@@ -16,7 +16,7 @@ vcftools --vcf skink.vcf --remove-indels --maf 0.05 --max-missing 0.9 \
 ```
 
 ```sh
-bcftools sort skink_filtered_sorted.vcf -0z -o
+bcftools sort skink_filtered_sorted.vcf -Oz -o
 bcftools index -t skink_filtered_sorted.vcf 
 ```
 
