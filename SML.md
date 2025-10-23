@@ -43,10 +43,10 @@ cd easySFS
 chmod 777 easySFS.py
 
 # step 1
-~/easySFS/easySFS.py -i skink.vcf -p Pegre_id_pop_2018.txt --preview
+~/easySFS/easySFS.py -i skink.vcf -p samples_id_pop.txt --preview
 
 # step2
-~/easySFS/easySFS.py -i skink.vcf -p Pegre_id_pop_2018.txt --proj 20,20
+~/easySFS/easySFS.py -i skink.vcf -p samples_id_pop.txt --proj 20,20
 ```
 
 ---
