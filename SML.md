@@ -43,10 +43,10 @@ cd easySFS
 chmod 777 easySFS.py
 
 # step 1
-~/easySFS/easySFS.py -i skink.vcf -p samples_id_pop.txt --preview
+~/easySFS/easySFS.py -i skink_filtered_sorted_subset.vcf -p id_anc_cluster.txt --preview
 
 # step2
-~/easySFS/easySFS.py -i skink.vcf -p samples_id_pop.txt --proj 20,20
+~/easySFS/easySFS.py -i skink_filtered_sorted_subset.vcf -p IDs_Clusters.txt --proj 22,22,32,6,22,22
 ```
 
 ---
