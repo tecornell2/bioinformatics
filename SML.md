@@ -52,21 +52,34 @@ chmod 777 easySFS.py
 ## 01_delimitR
 
 
-| sim | ono | liv | ins | egr |
+| similis | onocrepis | lividus | egregius | insularis |
 | :---- | :---: | ----: | ----: | ----: |
-|     |     |     |     |  F  |
-|     |     |  6  |  F  |     |
-|     |     | F   |     |     |
-|     | F   | 9   |   3 |     |
-| F   |     |     |     |     |
+|  FALSE   |   TRUE  |   FALSE  |  FALSE  |  TRUE  |
+|   TRUE  |   FALSE  |  TRUE  |  FALSE? |   TRUE?  |
+|   FALSE  |  TRUE   |  FALSE   |  FALSE?   |   FALSE   |
+|   FALSE  |  FALSE?   |  FALSE?   |   FALSE  |   FALSE  |
+|  TRUE?  |  TRUE?   |   FALSE  |   FALSE  |   FALSE   |
 
 #### inputs
 
 ```sh
-migmatrix <- matrix(c(FALSE, TRUE, FALSE,
-                    TRUE, FALSE, FALSE,
-                    FALSE, FALSE, FALSE),
+# guide tree
+observedtree <- '(((((0,1),4),3),2),5);'
+
+# migration matrix
+migmatrix <- matrix(c(FALSE, TRUE, FALSE, FALSE, TRUE, FALSE,
+                    TRUE, FALSE, TRUE, FALSE, TRUE, TRUE,
+                    FALSE, TRUE, FALSE, FALSE, FALSE, TRUE,
+                    FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+                    TRUE, TRUE, FALSE, FALSE, FALSE, FALSE,
+                    FALSE, TRUE, TRUE, FALSE, FALSE, FALSE),
                     nrow = 5, ncol = 5, byrow = TRUE)
+
+# max num of species
+obsspecies<- 5
+
+obsprefix <- 'tutorial_guidetree1'
+
 ```
 
 ```sh
