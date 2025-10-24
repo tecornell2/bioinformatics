@@ -49,4 +49,38 @@ chmod 777 easySFS.py
 ~/easySFS/easySFS.py -i skink_filtered_sorted_subset.vcf -p IDs_Clusters.txt --proj 22,22,32,6,22,22
 ```
 
----
+## 01_delimitR
+
+
+| sim | ono | liv | ins | egr |
+| :---- | :---: | ----: | ----: | ----: |
+|     |     |     |     |  F  |
+|     |     |  6  |  F  |     |
+|     |     | F   |     |     |
+|     | F   | 9   |   3 |     |
+| F   |     |     |     |     |
+
+#### inputs
+
+```sh
+migmatrix <- matrix(c(FALSE, TRUE, FALSE,
+                    TRUE, FALSE, FALSE,
+                    FALSE, FALSE, FALSE),
+                    nrow = 5, ncol = 5, byrow = TRUE)
+```
+
+```sh
+library(delimitR)
+setup_fsc2(tree=observedtree,
+           nspec=obsspecies,
+           samplesizes=obssamplesize,
+           nsnps=obssnps,
+           prefix=obsprefix,
+           migmatrix=migmatrix,
+           popsizeprior=obspopsizeprior,
+           divtimeprior=obsdivtimeprior,
+           migrateprior=obsmigrateprior,
+           secondarycontact= seccontact,
+           divwgeneflow= divwgeneflow,
+           maxmigrations = maxedges)
+```
