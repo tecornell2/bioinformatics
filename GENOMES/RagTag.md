@@ -20,6 +20,7 @@ Use RagTag to scaffold a drafted genome with a closely related reference genome.
   module load anaconda3/2023.09-0
   source activate ragtag
 
-  ragtag.py scaffold ThaEle.pri_genomic.fa Nfasc-CLP2811_genome.fasta
+  ragtag.py scaffold ThaEle.pri_genomic.fa Nfasc-CLP2811_genome.fasta \
+    -o ragtag_out \
     -t 16
 ```
