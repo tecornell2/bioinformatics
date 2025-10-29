@@ -57,7 +57,7 @@ Number of scaffolds > 50 KB:        	658
 ```
 
 </details>
-<p><</p>
+<p></p>
 <details><summary> bbstats .txt output file [after RagTag]</summary>
 
 
