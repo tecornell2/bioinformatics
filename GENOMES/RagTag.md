@@ -62,7 +62,7 @@ Number of scaffolds > 50 KB:        	658
 
 
 ```sh
-A	      C	      G	      T	      N	      IUPAC	   Other	GC	    GC_stdev
+A	     C	     G	     T      N	     IUPAC	 Other	GC	   GC_stdev
 0.2936	0.2065	0.2061	0.2938	0.0000	0.0000	0.0000	0.4126	0.0630
 
 Main genome scaffold total:         	418
