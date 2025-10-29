@@ -28,7 +28,7 @@ Use RagTag to scaffold a drafted genome with a closely related reference genome.
 ---
 
 Stats on Assembly [bbstats]
-### Comparison of statistics before and after RagTag scaffold
+### RagTag scaffolding statistics
 
 ```sh
 bbstats.sh in=Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta out=Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta.stats.txt Xmx64g
@@ -57,7 +57,7 @@ Number of scaffolds > 50 KB:        	658
 ```
 
 </details>
-
+<p><</p>
 <details><summary> bbstats .txt output file [after RagTag]</summary>
 
 
