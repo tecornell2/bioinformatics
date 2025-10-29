@@ -39,7 +39,7 @@ bbstats.sh in=Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta out=Nclar-CLP2810_ass
 
 
 ```sh
-A	      C	      G	      T	      N	      IUPAC	  Other	  GC	    GC_stdev
+A	  C	  G	  T	  N	  IUPAC	  Other	  GC	 GC_stdev
 0.2936	0.2064	0.2062	0.2938	0.0000	0.0000	0.0000	0.4126	0.0558
 
 Main genome scaffold total:         	818
