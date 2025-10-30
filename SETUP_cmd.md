@@ -112,9 +112,15 @@ source activate eggnog
 mamba install -c bioconda eggnog-mapper
 ```
 
-## funannotate
-use an Apptainer
+## overwriting
+```sh
+module load anaconda3/2023.09
+source activate env
+# if a package is not using the correct version of a dependency, it cna be over written
+# use module list for a lits of managed packages on the HPC
+module load minimap2/2.17
 
+```
 
 
 
