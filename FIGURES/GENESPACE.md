@@ -22,6 +22,8 @@ BiocManager::install("rtracklayer",lib="/home/tecorn/R/x86_64-pc-linux-gnu-libra
 # package is not available for this version of R
 
 ```
+### scratch that and return to r/4.4.0 in palmetto
+
 
 ### Installation Orthofinder
 ```sh
