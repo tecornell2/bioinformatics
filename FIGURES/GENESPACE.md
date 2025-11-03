@@ -16,8 +16,9 @@ devtools::install_github("jtlovell/GENESPACE", lib="/home/tecorn/R/x86_64-pc-lin
 
 BiocManager::install("Biostrings",lib="/home/tecorn/R/x86_64-pc-linux-gnu-library/4.4")
 BiocManager::install("rtracklayer",lib="/home/tecorn/R/x86_64-pc-linux-gnu-library/4.4")
+# rtracklayer Execution failed
 
-# if you use install.packages("rtracklayer")
+# also if you use install.packages("rtracklayer")
 # package is not available for this version of R
 
 ```
