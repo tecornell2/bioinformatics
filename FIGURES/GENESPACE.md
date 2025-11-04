@@ -22,7 +22,7 @@ BiocManager::install("rtracklayer",lib="/home/tecorn/R/x86_64-pc-linux-gnu-libra
 
 ```
 
-## Clemson.OnDemand/Interactive Apps/RStudio Server
+## Clemson.OnDemand/RStudio-Server
 * R v4.4.0
 * CPU cores: 4-16 CPU, depending on amount of genomes
 * List of modules to be loaded: orthofinder/2.5.4
@@ -34,6 +34,9 @@ BiocManager::install("rtracklayer",lib="/home/tecorn/R/x86_64-pc-linux-gnu-libra
 ```sh
 conda create -n orthofinder
 conda activate orthofinder
-conda install -c bioconda orthofinder=2.5.5
+conda install -c bioconda orthofinder=2.5.4
+
+# alternatively, on HPC
+module load orthofinder/2.5.4
 ```
 
