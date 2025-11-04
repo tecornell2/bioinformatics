@@ -13,6 +13,9 @@ bioinformatics
 │		├── HiFi
 │		└── Hi-C
 │
+├── POP_GEN
+│		└── STACKS
+│
 ├── OTHER
 └── SETUP_cmd
 ```
