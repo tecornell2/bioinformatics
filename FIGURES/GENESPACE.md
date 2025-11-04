@@ -33,6 +33,9 @@ BiocManager::install("rtracklayer",lib="/home/tecorn/R/x86_64-pc-linux-gnu-libra
 ```sh
 orthofinder -f /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/tmp -t 4 -a 4 -X -o /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/orthofinder/
 ```
+```sh
+diamond blastp -d /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/orthofinder/Results_Nov04/WorkingDirectory/diamondDBSpecies0 -q /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/orthofinder/Results_Nov04/WorkingDirectory/Species0.fa -o /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/orthofinder/Results_Nov04/WorkingDirectory/Blast0_0.txt --more-sensitive -p 1 --quiet -e 0.001 --compress 1
+```
 
 ### Installation Orthofinder
 ```sh
