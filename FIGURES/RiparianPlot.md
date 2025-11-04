@@ -34,6 +34,10 @@ conda install -c bioconda orthofinder=2.5.4
 # alternatively, on HPC
 module load orthofinder/2.5.4
 ```
+
+### MCScanX
+Download separately.
+
 # Run GENESPACE
 
 ### Clemson.OnDemand/RStudio-Server
@@ -85,3 +89,4 @@ WARNING: Too few hits between species 1 and species 1 to normalise the scores, t
 
 ...
 ```
+This fixed itself when I used a newer version of Orthofinder (v2.5.5) in an anaconda environment, instead of using the module of orthofinder (v2.4.5) available through the HPC. 
