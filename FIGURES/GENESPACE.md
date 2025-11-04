@@ -1,6 +1,6 @@
 https://github.com/jtlovell/GENESPACE
 
-### Installation GENESPACE
+## Installation GENESPACE
 ```sh
 module load r/4.4.0
 R
@@ -21,9 +21,8 @@ BiocManager::install("rtracklayer",lib="/home/tecorn/R/x86_64-pc-linux-gnu-libra
 # package is not available for this version of R
 
 ```
-##### scratch that and return to r/4.4.0 in palmetto
 
-##### Interactive Apps/RStudio Server
+## Interactive Apps/RStudio Server
 * R v4.4.0
 * CPU cores: 4-16 CPU, depending on amount of genomes
 * List of modules to be loaded: orthofinder/2.5.4
