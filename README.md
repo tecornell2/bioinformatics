@@ -4,10 +4,12 @@
 bioinformatics
 │
 ├── FIGURES
+│		├── RiparianPlot
 │		├── SnailPlot
 │		└── SyntenyPlot
 │
 ├── GENOMES
+│		├── RagTag
 │		├── HiFi
 │		└── Hi-C
 │
