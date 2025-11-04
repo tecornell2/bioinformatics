@@ -60,7 +60,8 @@ Be sure to allocate enough memory to the job. If Orthofinder is failing, check h
 For several attempts, I recieved the following error when running Orthofinder:
   ```sh
 2025-11-04 10:49:24 : Starting OrthoFinder 2.5.4
-[...]
+...
+
 Running diamond all-versus-all
 ------------------------------
 Using 4 thread(s)
@@ -70,7 +71,9 @@ Using 4 thread(s)
 ERROR: external program called by OrthoFinder returned an error code: -4
 
 Command: diamond blastp -d /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/orthofinder/Results_Nov04/WorkingDirectory/diamondDBSpecies0 -q /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/orthofinder/Results_Nov04/WorkingDirectory/Species0.fa -o /project/viper/venom/Taryn/Nerodia/Synt/GENESPACE/genespace_work/orthofinder/Results_Nov04/WorkingDirectory/Blast0_0.txt --more-sensitive -p 1 --quiet -e 0.001 --compress 1
-[...]
+
+...
+
 2025-11-04 11:00:53 : Done all-versus-all sequence search
 
 Running OrthoFinder algorithm
@@ -79,4 +82,6 @@ Running OrthoFinder algorithm
 WARNING: Too few hits between species 0 and species 0 to normalise the scores, these hits will be ignored
 WARNING: Too few hits between species 1 and species 1 to normalise the scores, these hits will be ignored
 2025-11-04 11:01:05 : Initial processing of species 0 complete
+
+...
 ```
