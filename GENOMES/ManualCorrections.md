@@ -1,12 +1,20 @@
 # Manual Corrections of Genome Assembly
 
 ## Plot contig size relative to scaffolds
-1. Import chr_plot_relative_size.py and scaffolds_size
+1. Import chr_plot_relative_size.py
 2. Generate a summary file from the ragtag.scaffold.agp (in ragtag_output folder)
 ```sh
 awk '$5=="W" {print $1"\t"$6"\t"$9}' ragtag.scaffold.agp | sort | uniq > ragtag_scaffold_summary.txt
 ```
-3. Run chr_plot_relative_size.py
+3. Generate a summary file for the scaffold sizes
+```sh
+samtools faidx Scutulatus_Manual_Review_Genome_Final.fa
+cut -f1,2 Scutulatus_Manual_Review_Genome_Final.fa.fai > scaffolds_final.chrom.sizes
+```
+5. Generate a table of chromosome name and corresponding chr number
+```sh
+```
+6. Run chr_plot_relative_size.py
 
 ## Hi-C Contact Map review
 1. Download Juicebox
