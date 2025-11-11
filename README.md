@@ -9,9 +9,10 @@ bioinformatics
 │		└── SyntenyPlot
 │
 ├── GENOMES
-│		├── RagTag
+│		├── HiC
 │		├── HiFi
-│		└── Hi-C
+│		├── ManualCorrections
+│		└── RagTag
 │
 ├── POP_GEN
 │		└── STACKS
