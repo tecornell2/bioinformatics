@@ -12,7 +12,10 @@ bioinformatics
 │		├── HiC
 │		├── HiFi
 │		├── ManualCorrections
-│		└── RagTag
+│		├── RagTag
+│		└── scripts
+│	      	├── chr_plot_order.py
+│		      └── chr_plot_relative_size.py
 │
 ├── POP_GEN
 │		└── STACKS
