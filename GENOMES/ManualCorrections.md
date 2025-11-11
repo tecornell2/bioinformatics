@@ -1,5 +1,7 @@
 # Manual Corrections of Genome Assembly
 
+## Plot contig relative to scaffolds
+
 ## Hi-C Contact Map review
 1. Download Juicebox
 2. Open .hic file from Juicer pipeline
