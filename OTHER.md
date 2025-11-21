@@ -2,8 +2,11 @@
 
 Name | Type | Use
 --- | --- | ---
-SRA Tool Kit | x | Access NCBI SRA data
-MiniMap2 | map | Align reference genomes
+SRA Tool Kit | import | Access NCBI SRA data
+MiniMap2 | gene mapping | Align reference genomes
+liftoff | gene mapping | Move gene annotations from reference to query genome
+name | type | note
+name | type | note
 name | type | note
 
 ---
@@ -13,13 +16,7 @@ for i in *
   do fasterq-dump $i
 done
 ```
----
-#### perl
-```sh
-# find and replace
-perl -pi -e 's/old/new/g' <file_name>
-```
----
+
 #### liftoff
 ```sh
 module load anaconda3/2023.09-0
@@ -34,6 +31,14 @@ liftoff -g ../../Synt/Thamnophis_elegans/ThaEle1.pri_genomic.gff3 \
 ../../Synt/Thamnophis_elegans/ThaEle.pri_genomic.fa
 ```
 ---
+#### perl
+```sh
+# find and replace
+perl -pi -e 's/old/new/g' <file_name>
+# copy file names in cd as a .txt file
+ls | perl -pe "s/_L006.*//g" > list.txt
+```
+
 #### R
 ```sh
 module load R/4.5
