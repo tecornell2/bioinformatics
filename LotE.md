@@ -2,6 +2,20 @@
 
 Following install instructions: https://cd-barratt.github.io/Life_on_the_edge.github.io/Vignette
 
+
+```sh
+species
+│
+├── LotE
+│		├── jobs
+│		├── raw_data
+│		└── working
+│	     	├── data
+│	     	├── outputs
+│		    └── scripts
+```
+
+
 ```sh
 # use apptainer to download bioconductor.sif
 apptainer remote add --no-login SylabsCloud cloud.sycloud.io
