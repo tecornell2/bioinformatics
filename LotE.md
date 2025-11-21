@@ -7,12 +7,14 @@ Following install instructions: https://cd-barratt.github.io/Life_on_the_edge.gi
 species
 │
 ├── LotE
+│		├── bioconductor_3.14_0.0.1.sif
 │		├── jobs
 │		├── raw_data
 │		└── working
 │	     	├── data
 │	     	├── outputs
 │		    └── scripts
+
 ```
 
 
