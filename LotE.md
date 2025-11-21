@@ -17,6 +17,7 @@ apptainer pull --arch amd64 library://sinwood/bioconductor/bioconductor_3.14:0.0
     - 30 second spatial resolution
     - time scales 2021-2040 <insert others>
     - Data: https://www.worldclim.org/data/cmip6/cmip6_clim30s.html
+    - Article on SSPs: https://www.dkrz.de/en/communication/climate-simulations/cmip6-en/the-ssp-scenarios
   * **WorldClim current**: 
 2. PLINK and MaxEnt
 3. Country border
