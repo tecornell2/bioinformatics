@@ -150,12 +150,10 @@ awk 'BEGIN{uc=lc=0} /^>/ {next} {
 module load hisat2
 module load samtools
 
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_GALBA
+hisat2-build -p 20 Nfasc-CLP2811_genome.scaffold.masked.fasta GINDEX
+
 cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_GALBA/RNA
-
-#index the genome
-hisat2-build -p 20 genome.fasta GINDEX
-
-#map reads
 while read SAMPLE; do
     echo "Processing ${SAMPLE}..."
     hisat2 -p 20 --rg-id ${SAMPLE} --rg SM:${SAMPLE} \
@@ -172,7 +170,7 @@ while read SAMPLE; do
     rm ${SAMPLE}_mapped.bam
     samtools index ${SAMPLE}_mapped.sorted.bam
 
-done < samples.txt
+done < RNA_list.txt
 
 ```
 
