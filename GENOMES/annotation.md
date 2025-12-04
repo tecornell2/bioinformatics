@@ -137,31 +137,42 @@ awk 'BEGIN{uc=lc=0} /^>/ {next} {
 ```sh
 #!/bin/bash
 
-#SBATCH --job-name HISTAT2_Nclar
-#SBATCH --output HISTAT2_Nclar_output
+#SBATCH --job-name HISTAT2_Nfasc
+#SBATCH --output HISTAT2_Nfasc_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 256gb
+#SBATCH --cpus-per-task 20
+#SBATCH --mem 96gb
 #SBATCH --time 72:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
+
+module load hisat2
+module load samtools
+
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_GALBA/RNA
 
 #index the genome
 hisat2-build -p 20 genome.fasta GINDEX
 
 #map reads
-hisat2 -p 20 --rg-id ${SAMPLE} --rg SM:${SAMPLE} --summary-file ${SAMPLE}_hisat2_summary.txt -x GINDEX -1 ${SAMPLE}_R1_val_1.fastq.gz -2 ${SAMPLE}_R2_val_2.fastq.gz -S ${SAMPLE}.sam
-samtools view -@ 20 -b -S -o ${SAMPLE}.bam ${SAMPLE}.sam
-rm ${SAMPLE}.sam
-samtools view -@ 20 -b -F 4 ${SAMPLE}.bam > ${SAMPLE}_mapped.bam
-rm ${SAMPLE}.bam
-samtools sort -@ 20 ${SAMPLE}_mapped.bam -o ${SAMPLE}_mapped.sorted.bam"
-rm ${SAMPLE}_mapped.bam
-samtools index ${SAMPLE}_mapped.sorted.bam
+while read SAMPLE; do
+    echo "Processing ${SAMPLE}..."
+    hisat2 -p 20 --rg-id ${SAMPLE} --rg SM:${SAMPLE} \
+        --summary-file ${SAMPLE}_hisat2_summary.txt \
+        -x GINDEX \
+        -1 ${SAMPLE}_R1_trim_1.fastq.gz \
+        -2 ${SAMPLE}_R2_trim_2.fastq.gz \
+        -S ${SAMPLE}.sam
 
-# left /data/RNA/Nclar-CLP2810_RNA_heart_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_kidney_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_liver_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_pancreas_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_SmIntest_R1_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_stomach_R1_trim.fastq.gz \
-# right /data/RNA/Nclar-CLP2810_RNA_heart_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_kidney_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_liver_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_pancreas_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_SmIntest_R2_trim.fastq.gz /data/RNA/Nclar-CLP2810_RNA_stomach_R2_trim.fastq.gz \
+    rm ${SAMPLE}.sam
+    samtools view -@ 20 -b -F 4 ${SAMPLE}.bam > ${SAMPLE}_mapped.bam
+    rm ${SAMPLE}.bam
+    samtools sort -@ 20 ${SAMPLE}_mapped.bam -o ${SAMPLE}_mapped.sorted.bam"
+    rm ${SAMPLE}_mapped.bam
+    samtools index ${SAMPLE}_mapped.sorted.bam
+
+done < samples.txt
 
 ```
 
