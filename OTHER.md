@@ -35,6 +35,7 @@ liftoff -g ../../Synt/Thamnophis_elegans/ThaEle1.pri_genomic.gff3 \
 ```sh
 module load gnuparallel/20210222
 
+# ensure job has 30 cpus
 parallel -a list_run1476.txt -j 30 -k --colsep '\t' 'echo {1} started
 	
 	module load anaconda3/2023.09-0
@@ -46,6 +47,8 @@ parallel -a list_run1476.txt -j 30 -k --colsep '\t' 'echo {1} started
 
 echo {1} finished ' 
 ```
+
+parallel -j 20 --progress fastqc -q -o fastqc/ {} ::: *.fastq.gz
 
 ---
 #### rename files batch job
