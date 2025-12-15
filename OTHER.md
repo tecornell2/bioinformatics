@@ -48,6 +48,47 @@ echo {1} finished '
 ```
 
 ---
+#### rename files batch job
+```sh
+#!/bin/bash
+#SBATCH --job-name rename_run816
+#SBATCH --output rename_run816_output
+#SBATCH --ntasks 1
+#SBATCH --mem 10gb 
+#SBATCH --time 1:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+# Script to rename FASTQ files based on barcode file
+# Usage: ./rename_fastq.sh barcodes_run.txt
+
+BARCODE_FILE="/project/viper/venom/Taryn/Plestiodon/Pegregius/RADseq_clean/01_trim_galore/816/barcodes_run816.txt"
+
+if [ ! -f "$BARCODE_FILE" ]; then
+    echo "Error: Barcode file not found: $BARCODE_FILE"
+    exit 1
+fi
+
+# Read the barcode file and process each line
+while IFS=$'\t' read -r combined_barcode sampleID; do
+    # Find matching R1 files
+    for file in *_${combined_barcode}_*_R1_*_trimmed.fq.gz; do
+        # Extract the lane/run prefix (e.g., "816")
+        prefix=${file%%_*}
+        
+        # Extract the S### identifier (e.g., "S383")
+        s_number=$(echo "$file" | grep -oP 'S\d+')
+        
+        # Create new name with S### included
+        new_name="${prefix}_${sampleID}_${s_number}_trimmed.fq.gz"
+        
+        mv "$file" "$new_name"
+        echo "$new_name"
+    done
+    
+done < "$BARCODE_FILE"
+```
+
 #### perl
 ```sh
 # find and replace
