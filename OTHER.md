@@ -5,7 +5,7 @@ Name | Type | Use
 SRA Tool Kit | import | Access NCBI SRA data
 MiniMap2 | gene mapping | Align reference genomes
 liftoff | gene mapping | Move gene annotations from reference to query genome
-name | type | note
+GNUparallel | parallel jobs | note
 name | type | note
 name | type | note
 
@@ -30,6 +30,23 @@ liftoff -g ../../Synt/Thamnophis_elegans/ThaEle1.pri_genomic.gff3 \
 ../04_ragtag/ragtag_output/Nclar-CLP2810_assembled_blood.scaffold.fasta \
 ../../Synt/Thamnophis_elegans/ThaEle.pri_genomic.fa
 ```
+
+#### GNU parallel
+```sh
+module load gnuparallel/20210222
+
+parallel -a list_run1476.txt -j 30 -k --colsep '\t' 'echo {1} started
+	
+	module load anaconda3/2023.09-0
+	source activate bio
+
+	cd /project/viper/venom/Taryn/Plestiodon/Pegregius/01_STACKS/00_raw/1476/
+
+	trim_galore --phred33 -o trimmed/{1}_L006_R1_001.fastq.gz &> trim/{1}.log
+
+echo {1} finished ' 
+```
+
 ---
 #### perl
 ```sh
