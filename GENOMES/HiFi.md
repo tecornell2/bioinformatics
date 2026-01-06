@@ -509,6 +509,31 @@ $FUNANNOTATE_DB:/funannotate_db \
 --annots /project/viper/venom/Ramses/HiFi/Apisc-DRR0068/WGS/blood/Combined_PacBio_HiFi/05_annotate/annotate/update_misc/pasa/Agkistrodon_piscivorus_pasa.gene_structures_post_PASA_updates.880002.gff3 &> pasa-comparison2.5.log
 ```
 
+---
+## BRAKER
+
+```sh
+#!/bin/bash
+#SBATCH --job-name 06_BRAKER_Nfasc
+#SBATCH --output 06_BRAKER_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 8
+#SBATCH --mem 180gb
+#SBATCH --time 96:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_BRAKER
+
+singularity exec braker3.sif braker.pl \
+      --species=nerodiaFasciata \
+      --genome=Nfasc-CLP2811_genome.scaffold.masked.fasta \
+      --rnaseq_sets_ids=Nfasc-CLP2811_RNA_heart_mapped.sorted,Nfasc-CLP2811_RNA_kidney_mapped.sorted,Nfasc-CLP2811_RNA_liver_mapped.sorted,Nfasc-CLP2811_RNA_stomach_mapped.sorted,Nfasc-CLP2811_RNA_pancreas_mapped.sorted,Nfasc-CLP2811_RNA_SmIntest_mapped.sorted \
+      --rnaseq_sets_dirs=./RNA/ \
+      --workingdir=braker_output \
+      --threads=8
+```
 
 
 
