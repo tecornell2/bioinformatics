@@ -9,8 +9,11 @@ bioinformatics
 │		└── SyntenyPlot
 │
 ├── GENOMES
-│		├── HiC
-│		├── HiFi
+│		├── ASSEMBLY-Hi-C
+│		├── ASSEMBLY-HiFi
+│		├── ANNOTATION-BRAKER
+│		├── ANNOTATION-funannotate
+│		├── ANNOTATION-GALBA
 │		├── ManualCorrections
 │		├── RagTag
 │		└── scripts
