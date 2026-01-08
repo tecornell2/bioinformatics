@@ -1,3 +1,5 @@
+**incomplete and untested at GALBA step**
+
 # GENOME ANNOTATION
 <information>
 
