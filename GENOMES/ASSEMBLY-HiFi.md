@@ -15,9 +15,26 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 
 ### 1.2 Trim [Trim Galore!]
 Documentation: https://github.com/FelixKrueger/TrimGalore
-
 Trimming adapters can have negligable effect on the quality of the assembly. Thsi step can be skipped. 
 
+### 1.3 Stats [bbstats]
+  ```sh
+bbstats.sh in=Pegre-CLP3001_WGS_blood_hifi.fastq.gz
+  ```
+
+**Calculate coverage:**
+1. Determine total length (in bases) of raw HiFi reads
+
+   bbstats output - 
+      Main genome contig sequence total:  	57665.176 Mb
+
+   ```zcat Pegre-CLP3001_assembled_blood.bp.p_ctg.fasta | awk 'NR%4==2 {sum += length($0)} END {print sum}'```
+2. Divide raw sequence total (total bases) by the expected genome size (ex. 1.5Gb or 1,500Mb or 1,500,000,000)
+
+   57665.176/1500 = 38.4x coverage
+
+### 1.4 Plots [NanoPlot]
+  
 ## 2. Assembly [hifiasm]
 
 #### .job file
@@ -55,7 +72,7 @@ hifiasm requires input reads in FASTQ format
 
 Resource: https://hifiasm.readthedocs.io/en/latest/interpreting-output.html 
 
-2.1 Stats on Assembly [bbstats]
+2.1 Stats [bbstats]
 Run basic statistics on assmebly (N50) prior to next step.
 
 ```sh
