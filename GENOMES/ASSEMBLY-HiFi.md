@@ -28,8 +28,10 @@ bbstats.sh in=Pegre-CLP3001_WGS_blood_hifi.fastq.gz
    bbstats output - 
       Main genome contig sequence total:  	57665.176 Mb
 
-   ```zcat Pegre-CLP3001_assembled_blood.bp.p_ctg.fasta | awk 'NR%4==2 {sum += length($0)} END {print sum}'``` (57665176834 bases)
-2. Divide raw sequence total (total bases) by the expected genome size (ex. 1.5Gb or 1,500Mb or 1,500,000,000)
+   ```zcat Pegre-CLP3001_assembled_blood.bp.p_ctg.fasta | awk 'NR%4==2 {sum += length($0)} END {print sum}'```
+
+   (57665176834 bases)
+3. Divide raw sequence total (total bases) by the expected genome size (ex. 1.5Gb or 1,500Mb or 1,500,000,000)
 
    57665.176/1500 = 38.4x coverage
 
