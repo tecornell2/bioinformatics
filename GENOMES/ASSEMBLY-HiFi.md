@@ -16,6 +16,8 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 ### 1.2 Trim [Trim Galore!]
 Documentation: https://github.com/FelixKrueger/TrimGalore
 
+Trimming adapters can have negligable effect on the quality of the assembly. Thsi step can be skipped. 
+
 ## 2. Assembly [hifiasm]
 
 #### .job file
@@ -116,8 +118,8 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 #### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name 04_BUSCO_Nclar
-#SBATCH --output 04_BUSCO_Nclar_output
+#SBATCH --job-name 03_BUSCO_Nclar
+#SBATCH --output 03_BUSCO_Nclar_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 50
