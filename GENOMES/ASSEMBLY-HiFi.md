@@ -6,11 +6,11 @@ The following pipeline is heavily based on a free tutorial from Rhett Rautsaw (h
 
 ## 1. Data Preparation 
 
-### 1.1 Concatenate
+### 1.1 Convert
 #### HiFi raw data
+  The HiFi data is recieved as a .bam file(s)
   ```sh
-  # concat hifi reads from different runs into a single file
-  cat Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz
+  # .bam to .fastq
   ```
 
 ### 1.2 Trim [Trim Galore!]
