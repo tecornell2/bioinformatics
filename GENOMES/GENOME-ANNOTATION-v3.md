@@ -1,0 +1,315 @@
+### General Workflow
+1. Soft-mask genome
+2. Index RNA-seq data
+3. Structural gene annotation
+4. Functional gene annotate: InterProScan, eggNOG-mapper, SignalP
+5. Integrate annotations into gff/gtf file
+6. Evaluation: BUSCO, OrthoFinder
+
+---
+
+## EDTA
+
+Transposable Element Annotation and Repeat Masking [EDTA]
+Extensive De-novo TE Annotator (EDTA) performs RepeatModeler/RepeatMasker
+
+### .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name 03_EDTA_Pegre
+#SBATCH --output 03_EDTA_Pegre_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 256gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+ module load anaconda3/2023.09-0
+ source activate edta
+
+ cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/03_EDTA
+
+ # run EDTA on assembled genome
+ perl /home/tecorn/.conda/envs/edta/share/EDTA/EDTA.pl \
+ --genome ../Pegre-CLP3001_genome.fasta \
+ --species others \
+ --step all \
+ --sensitive 1 \
+ --anno 1 \
+ --force 1 \
+ --threads 24
+```
+force [0|1] Use rice TEs to continue when no confident TE candidates are found (1)
+sensitive [0|1]	Use RepeatModeler to identify remaining TEs (1)
+overwrite [0|1] Use to overwrite previous steps (files) produced by EDTA (default, 0)
+Documentation: https://github.com/oushujun/EDTA?tab=readme-ov-file
+https://www.repeatmasker.org/ 
+
+## RepeatMasker
+
+### .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name 06_RepeatMask_Nfasc
+#SBATCH --output 06_RepeatMask_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 12
+#SBATCH --mem 96gb
+#SBATCH --time 24:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+ module load anaconda3/2023.09-0
+ source activate edta
+
+ cd /project/viper/venom/Taryn/Nerodia/Nfasciata/05_EDTA/RepeatMasker
+
+ RepeatMasker -pa 12 -e ncbi -lib Nfasc-CLP2811_assembled_blood.scaffold.fasta.mod.EDTA.TElib.fa \
+  -gff -xsmall ../Nfasc-CLP2811_assembled_blood.scaffold.fasta
+```
+
+A genome soft-masked fro repeats is required for BRAKER3.
+
+## HISAT2
+Graph-based alignment of next-generation sequencing reads
+
+### .job file
+```sh
+#!/bin/bash
+
+#SBATCH --job-name HISAT2_Nfasc
+#SBATCH --output HISAT2_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 20
+#SBATCH --mem 96gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+module load hisat2
+module load samtools
+
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_GALBA
+hisat2-build -p 20 Nfasc-CLP2811_genome.scaffold.masked.fasta GINDEX
+```
+### .job file
+```sh
+#!/bin/bash
+
+#SBATCH --job-name HISAT2_RNA_Nfasc
+#SBATCH --output HISAT2_RNA_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 20
+#SBATCH --mem 56gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+module load hisat2
+module load samtools
+
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_GALBA/RNA
+while read SAMPLE; do
+    echo "Processing ${SAMPLE}..."
+    hisat2 -p 20 --rg-id ${SAMPLE} --rg SM:${SAMPLE} \
+        --summary-file ${SAMPLE}_hisat2_summary.txt \
+        -x ../GINDEX \
+        -1 ${SAMPLE}_R1_trim.fastq.gz \
+        -2 ${SAMPLE}_R2_trim.fastq.gz \
+        -S ${SAMPLE}.sam
+
+    echo "Completed ${SAMPLE}"
+
+    samtools view -@ 20 -b -S -o ${SAMPLE}.bam ${SAMPLE}.sam
+    rm ${SAMPLE}.sam
+    samtools view -@ 20 -b -F 4 -o ${SAMPLE}_mapped.bam ${SAMPLE}.bam
+    rm ${SAMPLE}.bam
+    samtools sort -@ 20 ${SAMPLE}_mapped.bam -o ${SAMPLE}_mapped.sorted.bam
+    rm ${SAMPLE}_mapped.bam
+    samtools index ${SAMPLE}_mapped.sorted.bam
+    echo "Converted to ${SAMPLE} sorted.bam"
+done < RNA_list.txt
+```
+
+## BRAKER
+Structural gene annotation
+
+**NOTE**: **For installation**, manually copy the AUGUSTUS_CONFIG_PATH contents to a writable location before running our containers from Nextflow. Afterwards, you need to specify the writable AUGUSTUS_CONFIG_PATH as command line argument to BRAKER in Nextflow.
+```sh
+## INSTALLATION ONLY
+# create dir in same location as braker3.sif
+mkdir -p $PWD/augustus_config
+# copy config from container
+singularity exec braker3.sif cp -r /opt/Augustus/config/ $PWD/augustus_config
+# fix permissions if necessary 
+chmod -R u+w $PWD/augustus_config/
+# modify test scripts (test1.sh, test2.sh, test3.sh) to bind to new augustus config location
+singularity exec -B $PWD:$PWD -B $PWD/augustus_config:/opt/Augustus/config braker3.sif braker.pl [options]
+### added bind: -B $PWD/augustus_config:/opt/Augustus/config 
+```
+
+### .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name 06_BRAKER_Nfasc_v2
+#SBATCH --output 06_BRAKER_Nfasc_v2_output
+#SBATCH --partition nodeviper
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 18
+#SBATCH --mem 220gb
+#SBATCH --time 300:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_BRAKER
+
+singularity exec -B $PWD:$PWD -B $PWD/augustus_config/config:/opt/Augustus/config braker3.sif braker.pl \
+  --species=nerodiaFasciata_v4 \
+  --genome=Nfasc-CLP2811_genome.scaffold.masked.fasta \
+  --prot_seq=./proteins/tetrapod_ThaEle_protein.faa \
+  --bam=./RNA/merged_RNA.bam \
+  --workingdir=braker_output_v4 \
+  --threads=18
+# not including an protseq database could dramatically inflate the number of gene loci identified
+```
+
+The output .aa file is the extracted protein sequences file. This is required for the functional annotation steps.
+
+To check the amount of gene loci identified by BRAKER, use:
+```sh
+grep -c $'\tgene\t' braker.gtf
+```
+
+***Results from different BRAKER inputs***
+
+   BRAKER_output_v1 -(RNAseq data only)-> 54849
+
+   BRAKER_output_v2 -(RNAseq data + tetrapoda protein database)-> 15002 genes / 88.5% C BUSCO
+
+   BRAKER_output_v3 -(RNAseq data + tetrapoda protein database + ThaEle protein database)-> 17455 genes / 88.7% C
+
+   BRAKER_output_v4 -(RNAseq data + tetrapoda protein database + ThaEle protein database + ThaSir protein database)-> 
+
+
+## BUSCO 
+
+### .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name BUSCO_Nfasc
+#SBATCH --output BUSCO_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 166gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+  module load anaconda3/2023.09-0
+  # activate conda environment busco
+  source activate busco
+
+  # change to directory with genome file
+  cd /project/viper/venom/Taryn/Nerodia/Nfasciata/06_BRAKER
+
+  # run BUSCO on proteins
+  busco -i ./braker_output_v2/braker.aa  -m proteins -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c 24 -o BUSCO_output_for_braker_v2
+```
+
+## InterProScan
+Protein domains, protein families, functional sites, and GO terms
+
+### .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name=07_interpro_Nfasc
+#SBATCH --output=07_interpro_Nfasc_output
+#SBATCH --nodes=1
+#SBATCH --partition=nodeviper
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=250gb
+#SBATCH --time=120:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=tecorn@clemson.edu
+
+# load java
+module load java/11.0.2
+
+INTERPROSCAN=/home/johnhen/Databases/funannotate_databases/interproscan-5.75-106.0/interproscan.sh
+INPUT=/project/viper/venom/Taryn/Nerodia/Nfasciata/07_annotation
+OUTDIR=/project/viper/venom/Taryn/Nerodia/Nfasciata/07_annotation/interproscan_output
+
+mkdir -p $OUTDIR
+
+$INTERPROSCAN \
+  -i $INPUT \
+  -f XML,GFF3,TSV \
+  -dp \
+  -cpu 24 \
+  -appl Pfam,SMART,TIGRFAM,CDD \
+  -iprlookup \
+  -goterms \
+```
+
+## eggNOG-mapper
+Orthology-based functional annotation (GO terms, KEGG pathways, COG categories)
+
+### .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name 07_eggnog_Nfasc
+#SBATCH --output 07_eggnog_Nfsac_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 24gb
+#SBATCH --time 2:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate eggnog
+
+cd /project/viper/venom/Taryn/Nerodia/Nfasciata/07_annotation/eggnog/
+
+emapper.py \
+  -i ../inputs/Nfasc_longIso.aa \
+  --data_dir /home/tecorn/eggnog-mapper-data \
+  -m diamond \
+  --dmnd_db /home/tecorn/eggnog-mapper-data/eggnog-proteins.dmnd \
+  --cpu 24
+  --output_dir ./output/ \
+  --output Nfasc 
+```
+
+## SignalP
+
+## .job file
+```sh
+#!/bin/bash
+#SBATCH --job-name 07_SignalP
+#SBATCH --output 07_SignalP_Nfasc_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 100gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+signalp 
+```
+
+## BUSCO
+
+## OrthoFinder
