@@ -1,0 +1,85 @@
+Source: https://speciationgenomics.github.io/filtering_vcfs/ 
+
+```
+vcftools --vcf final.recode.vcf --freq2 --max-alleles 2
+
+vcftools --vcf final.recode.vcf --depth
+
+vcftools --vcf final.recode.vcf --site-mean-depth
+
+vcftools --vcf final.recode.vcf --site-quality 
+
+vcftools --vcf final.recode.vcf --missing-indv
+
+vcftools --vcf final.recode.vcf --missing-site
+
+vcftools --vcf final.recode.vcf --het
+```
+
+```
+# standard Fst
+vcftools --vcf final.recode.vcf \
+  --weir-fst-pop pop_egr.txt \
+  --weir-fst-pop pop_ins.txt \
+  --weir-fst-pop pop_liv.txt \
+  --weir-fst-pop pop_ono.txt  \
+  --weir-fst-pop pop_sim.txt \
+  --out spp_pop
+
+
+
+# sliding window Fst
+vcftools --vcf my_data.vcf \
+  --weir-fst-pop pop1.txt \
+  --weir-fst-pop pop2.txt \
+  --fst-window-size 50000 \
+  --fst-window-step 10000 \
+  --out pop1_vs_pop2_windowed
+```
+
+
+#############################################
+## April 2026
+# STACKS filtering .vcf aligned to ragtaged reference genome
+
+Extracting indiviudals to remove:
+```awk '$5 > 0.8 {print $1}' out.imiss > remove.txt```
+
+# prior to these I use different filtering schemes
+# review /03_vcf_filtering/run4 for previous filtering
+
+vcftools \
+  --vcf *populations.snps.vcf \
+  --remove 0.8_missing_and_out.txt \
+  --minDP 5 \
+  --maxDP 30 \
+  --recode \
+  --out step1
+
+vcftools \
+  --vcf step1.recode.vcf \
+  #--maf 0.05 \
+  --min-meanDP 5 \
+  --max-meanDP 25 \
+  --max-missing 0.5 \
+  --remove-indels \
+  --recode \
+  --out final
+
+#############################################
+## May 19 2026
+# STACKS filtering .vcf aligned to reference genome (hifi only)
+
+## SFS dataset
+# using above step1.vcf to remove singletons (--mac 2) (and no --maf 0.05 )
+vcftools \
+  --vcf step1.recode.vcf \
+  --mac 2 \
+  --min-meanDP 5 \
+  --max-meanDP 25 \
+  --max-missing 0.5 \
+  --remove-indels \
+  --recode \
+  --out demographic_dataset
+# this dataset can be used for site frequency spectrum, which relies on maf
+# this dataset can be used for sNMF
