@@ -1,0 +1,110 @@
+#!/bin/bash
+
+#SBATCH --job-name 03_RAD-WGS_GATK
+#SBATCH --output 03_GATK_nextRAD_WGS_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 32
+#SBATCH --partition nodeviper
+#SBATCH --constraint=cpu_gen_genoa
+#SBATCH --mem 128gb
+#SBATCH --time 168:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+####################### Set inputs and Load packages ##############################
+module load anaconda3/2023.09-0
+source activate bio
+
+module load samtools
+
+BASE="/project/viper/venom/Taryn/Plestiodon/Pegregius"
+REF="${BASE}/WGS/genome/Pegre-CLP3001_assembled_blood.fa"
+OUTDIR="${BASE}/GATK/output"
+SAMPLE_INFO="${BASE}/GATK/00_sample_sheet.txt"
+TMPDIR="/scratch/${USER}/gatk_2_tmp"
+THREADS=8
+
+# export to read variables in GNU parallel
+export BASE REF OUTDIR THREADS
+
+#SAMPLE_INFO
+# sample_id<TAB>type
+  #sample1    WGS
+  #sample2    nextRAD
+
+mkdir -p "$OUTDIR" "$TMPDIR"
+
+####################### Create sample map ##############################
+
+SAMPLE_MAP="${OUTDIR}/sample_map.tsv"
+: > "$SAMPLE_MAP"
+
+####################### Create additional ref files ##############################
+
+# samtools faidx "$REF"
+# gatk CreateSequenceDictionary -R "$REF"
+
+####################### Begin pipeline ##############################
+
+echo "Per-sample calling to GVCF..."
+
+grep -v '^#' "$SAMPLE_INFO" | \
+parallel --colsep '\t' -j 4 --joblog "${OUTDIR}/parallel_hc.log" '
+  SAMPLE={1}
+  TYPE={2}
+
+  # read data type to determine input BAM file dir
+  case "$TYPE" in
+    WGS)
+      INPUT_BAM="${BASE}/WGS/02_align/${SAMPLE}/${SAMPLE}_aligned_sorted_marked_RG.bam"
+      ;;
+    nextRAD)
+      INPUT_BAM="${BASE}/nextRAD/02_align/${SAMPLE}_aligned_sorted_RG.bam"
+      ;;
+    *)
+      echo "ERROR"
+      exit 1
+      ;;
+  esac
+
+  # output variable
+  GVCF="${OUTDIR}/${SAMPLE}.g.vcf.gz"
+
+  echo "Start ${SAMPLE} : ${TYPE}"
+
+  # Create .bai index file if it does not exist
+  [[ -f "${INPUT_BAM}.bai" ]] || samtools index "$INPUT_BAM"
+
+  gatk --java-options "-Xmx16g" HaplotypeCaller \
+    -R "$REF" \
+    -I "$INPUT_BAM" \
+    -O "$GVCF" \
+    -ERC GVCF \
+    --native-pair-hmm-threads "$THREADS"
+
+'
+
+# Create sample map
+  # sets SAMPLE_MAP to empty
+: > "$SAMPLE_MAP"
+while IFS=$'\t' read -r SAMPLE TYPE; do
+  printf "%s\t%s/%s.g.vcf.gz\n" "$SAMPLE" "$OUTDIR" "$SAMPLE" >> "$SAMPLE_MAP"
+done < <(grep -v '^#' "$SAMPLE_INFO")
+
+echo "Importing GVCFs to GenomicsDB..."
+
+gatk --java-options "-Xmx100g -Xms16g" GenomicsDBImport \
+  --genomicsdb-workspace-path "${OUTDIR}/cohort_db" \
+  --overwrite-existing-genomicsdb-workspace true \
+  --sample-name-map "$SAMPLE_MAP" \
+  --tmp-dir "$TMPDIR" \
+  -L "${BASE}/WGS/genome/genome.intervals"
+
+echo "Joint genotyping..."
+
+gatk --java-options "-Xmx16g" GenotypeGVCFs \
+  -R "$REF" \
+  -V "gendb://${OUTDIR}/cohort_db" \
+  -O "${OUTDIR}/cohort.raw.vcf.gz"
+
+echo "GATK Joint calling completed successfully. This file has not been hard filtered."
