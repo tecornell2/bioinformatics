@@ -1,0 +1,2097 @@
+Overall, my pipeline goes as follows:
+Get raw reads from PacBio convert them to Fastq files and run nanoplot
+After nanoplot run bbstats and see if the files look good and ready for Hifiasm
+Run Hifiasm to assemble the genome
+After Hifiasm assess quality of genome with BUSCO
+After BUSCO it is time to add the HiC data
+Download raw reads and assess quality with fastqc
+After fastqc use fastp or Trim Galore to trim the Hi-C reads (I used Trim Galore)
+After take the trimmed reads and use bwa and samtools to index them to your genome
+Then use YaHs to scaffold genome using HiC data
+
+
+
+
+
+
+awk '/^S/{print ">"$2;print $3}' Clepi-CLP2201_WGS_blood.bp.p_ctg.gfa > Clepi-CLP2201_WGS_blood.p_ctg.fasta
+
+awk '/^S/{print ">"$2;print $3}' CLP1832_assembled_blood.bp.p_ctg.gfa > CLP1832_assembled_blood.bp.p_ctg.fasta
+
+CLP1832_assembled_blood.bp.p_utg.gfa
+CLP1832_assembled_blood.bp.p_ctg.gfa
+
+awk '/^S/{print ">"$2;print $3}' CLP2111_assembled_blood.bp.p_ctg.gfa > CLP2111_assembled_blood.bp.p_ctg.fasta
+
+
+bbstats.sh -in=CLP1832_assembled_blood.bp.p_ctg.fasta &> CLP1832_assembled_blood.bp.p_ctg.fasta.stats.txt
+
+bbstats.sh -in=CLP2111_assembled_blood.bp.p_ctg.fasta &> CLP2111_assembled_blood.bp.p_ctg.fasta.stats.txt
+#RHETT USED AN ALIAS IT SHOULD BE bbstats.sh
+
+
+
+BUSCO
+tar -xzf tetrapoda_odb12.2025-04-11.tar
+busco -i CLP1832_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/02_Busco
+
+
+#!/bin/bash
+
+#SBATCH --job-name BUSCO2111
+#SBATCH --output BUSCO2111_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_2111_Genome/01_Data
+busco -i CLP2111_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o 02_Busco
+
+
+Now I am getting ready to add Hi-C data to my assembled genome
+First create a new anaconda environment other than (genome_env)
+
+conda create -n yahs_env -c bioconda
+
+conda install -c bioconda yahs
+conda install -c bioconda bwa
+conda install -c bioconda samtools
+
+
+FASTQC on Hi-C files
+#!/bin/bash
+
+#SBATCH --job-name Fastqc_HiC
+#SBATCH --output Fastqc_HiC_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+fastqc 1832_S1_R1_001.fastq.gz 1832_S1_R2_001.fastq.gz
+
+
+After running fastqc it appears that there is leftover adapter and poly g tails so I am running Trim Galore to try to clean them up a little. 
+trim_galore \
+  --paired \
+  1832_S1_R1_001.fastq.gz \
+   1832_S1_R2_001.fastq.gz \
+  --cores 4
+
+
+Trim Galore for the turtle
+
+
+trim_galore \
+  --paired \
+  turtle_S4_R1_001.fastq.gz \
+  turtle_S4_R2_001.fastq.gz \
+  --cores 4
+
+=> Trimmed everything with a phred score below 20 (99% confidence)
+
+Now I am rerunning Fastqc to see if my quality has improved
+unzip 1832_S1_R2_001_val_2_fastqc.zip
+unzip 1832_S1_R1_001_val_1_fastqc.zip
+
+Based on the reports it seems as if the Trim Galore did a good job of trimming the adapters off and cleaning them. On to BWA
+
+
+Ok going to move on to using BWA to index the alignment and combine my Hi-C with my genome using the following:
+#!/bin/bash
+#SBATCH --job-name=bwa_hic_align
+#SBATCH --output=bwa_hic_align_%j.out
+#SBATCH --error=bwa_hic_align_%j.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+#SBATCH --partition=standard  # Adjust based on your cluster's partitions
+
+# Load Conda
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate yahs_env
+
+# Inputs
+READ1="1832_S1_R1_001_val_1.fq.gz"
+READ2="1832_S1_R2_001_val_2.fq.gz"
+GENOME="CLP1832_assembled_blood.bp.p_ctg.fasta"
+OUT_BAM="CLP1832_yahs.bam"
+
+
+# Index genome if needed
+if [ ! -f "${GENOME}.bwt" ]; then
+    echo "Indexing genome with BWA..."
+    bwa index $GENOME
+fi
+
+# Run BWA-MEM + samtools
+echo "Aligning Hi-C reads with BWA..."
+bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
+    samtools view -@ $THREADS -b -h -F 2316 - | \
+    samtools sort -@ $THREADS -o $OUT_BAM
+
+# Index the BAM
+samtools index $OUT_BAM
+
+echo "Done: Alignment output = $OUT_BAM"
+
+Ok that only worked for creating the index files. Trying this now:
+#!/bin/bash
+
+#SBATCH --job-name HiCYahs
+#SBATCH --output HiCYahs_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+# Load environment
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+# Move to working directory
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+
+# Set input variables
+THREADS=50
+REF=CLP1832_assembled_blood.bp.p_ctg.fasta
+R1=1832_S1_R1_001_val_1.fq.gz
+R2=1832_S1_R2_001_val_2.fq.gz
+
+# Run alignment with multithreading
+bwa mem -5SP -t $THREADS $REF $R1 $R2 | \
+  samtools view -@ $THREADS -b -h -F 2316 - > hic_aln.bam
+
+  Hopefully this is creating a .bam file that is ready for YaHs
+Ok this ran and appears to work is created hic_aln.bam
+
+Now i QC the step with :
+samtools sort -o hic_aln.sorted.bam hic_aln.bam
+
+followed by 
+samtools quickcheck hic_aln.sorted.bam
+=>this returned nothing so I proceeded with 
+samtools quickcheck hic_aln.sorted.bam
+
+which created hic_aln.sorted.bam.bai
+
+
+
+
+OK so now were trying some of this trash again:
+Running Hifiasm on the fastq Hi-C reads after trim galore has done its job combined with the Hifi reads. So should create a better complete genome
+
+So for my three genomes (1832, 2111, and turtle) I need to do the following
+
+1832: hifiasm+hic -> bbstats -> BUSCO -> bwa+mem -> yahs -> ragtag 
+2111: scaffold to 1832 once finished with it
+turtle: fastqc -> trim galore on hiC reads -> hifiasm+hic -> bbstats -> BUSCO -> bwa+mem -> yahs
+
+Scutulatus
+awk '/^S/{print ">"$2;print $3}' CLP1832_assembled_blood_plusHiC.hic.p_ctg.gfa > CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta
+bbstats.sh -in=CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta &> CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta.stats.txt
+
+turtle
+awk '/^S/{print ">"$2;print $3}' Turtle_assembled_blood_plusHiC.hic.p_ctg.gfa > Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta
+bbstats.sh -in=Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta &> Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta.stats.txt
+
+Turtle_assembled_blood_plusHiC.hic.p_ctg.gfa
+
+Now BUSCO
+#!/bin/bash
+
+#SBATCH --job-name BUSCO_1832_plusHiC
+#SBATCH --output BUSCO1832_plusHiC__output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+busco -i CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o 02_Busco
+
+
+
+TURTLE_BUSCO
+#!/bin/bash
+
+#SBATCH --job-name Turtle_Busco
+#SBATCH --output Turtle_BUSCO_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+cd /project/viper/venom/John_Henry/Turtle
+busco -i Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 50 -o 02_Busco
+
+Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta
+
+Ok now moving to bwa and mem to index my genome for yahs
+#!/bin/bash
+#SBATCH --job-name=bwa_blood_hic_align
+#SBATCH --output=bwa_blood_hic_align_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+cd cd /project/viper/venom/John_Henry/Turtle
+# Define variables
+THREADS=50
+READ1="1832_S1_R1_001_val_1.fq.gz"
+READ2="1832_S1_R2_001_val_2.fq.gz"
+GENOME="CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta"
+OUT_BAM="blood_hic_algn.bam"
+SORTED_BAM="blood_hic_algn_sorted.bam"
+
+# Index genome if needed
+if [ ! -f "${GENOME}.bwt" ]; then
+    echo "[INFO] Indexing genome with BWA..."
+    bwa index $GENOME
+fi
+
+# Run BWA-MEM and process with samtools
+bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
+    samtools view -@ $THREADS -b -h -F 2316 - | \
+    samtools sort -@ $THREADS -o $SORTED_BAM
+
+# Index the sorted BAM
+samtools index $SORTED_BAM
+
+
+
+
+BWA plus Mem Turtle
+
+#!/bin/bash
+#SBATCH --job-name=bwa_turtle_hic_align
+#SBATCH --output=bwa_turtle_hic_align_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+
+cd /project/viper/venom/John_Henry/Turtle
+# Define variables
+THREADS=50
+READ1="turtle_S4_R1_001_val_1.fq.gz"
+READ2="turtle_S4_R2_001_val_2.fq.gz"
+GENOME="Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta"
+OUT_BAM="turtle_hic_algn.bam"
+SORTED_BAM="turtle_hic_algn_sorted.bam"
+
+# Index genome if needed
+if [ ! -f "${GENOME}.bwt" ]; then
+    echo "[INFO] Indexing genome with BWA..."
+    bwa index $GENOME
+fi
+
+# Run BWA-MEM and process with samtools
+bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
+    samtools view -@ $THREADS -b -h -F 2316 - | \
+    samtools sort -@ $THREADS -o $SORTED_BAM
+
+# Index the sorted BAM
+samtools index $SORTED_BAM
+
+
+
+
+
+
+
+
+
+Ran Yahs
+
+Requires .fai file
+Run:
+samtools faidx Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta
+
+
+#!/bin/bash
+
+#SBATCH --job-name Yahs
+#SBATCH --output Yahs_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+yahs CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta blood_hic_algn_sorted.bam
+
+yahs_turtle
+#!/bin/bash
+
+#SBATCH --job-name Yahs
+#SBATCH --output Yahs_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+/project/viper/venom/John_Henry/Turtle
+yahs Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta turtle_hic_algn_sorted.bam
+
+
+Now Running BUSCO on Yahs output
+#!/bin/bash
+
+#SBATCH --job-name BUSCO_YAHS
+#SBATCH --output BUSCO_YAHS_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+busco -i yahs.out_scaffolds_final.fa  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o YAHS_Busco
+
+And bbstats on yahs output:
+bbstats.sh in=yahs.out_scaffolds_final.fa &> yahs.out_scaffolds_final.fa.stats.txt
+
+
+
+Turtle_BUSCO
+#!/bin/bash
+
+#SBATCH --job-name BUSCO_Yahs_turtle
+#SBATCH --output BUSCO_Yahs_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 370gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+# Change to the directory where the scaffolded turtle genome is
+cd /project/viper/venom/John_Henry/Turtle
+
+# Run BUSCO on the scaffolded genome
+busco \
+  -i yahs.out_scaffolds_final.fa \
+  -o BUSCO_Turtle_YAHS \
+  -l /home/johnhen/Databases/tetrapoda_odb12 \
+  -m genome \
+  -c 32
+
+
+#!/bin/bash
+
+#SBATCH --job-name BUSCO_Yahs_scut
+#SBATCH --output BUSCO_Yahs_scut_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 370gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+# Change to the directory where the scaffolded turtle genome is
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+
+# Run BUSCO on the scaffolded genome
+busco \
+  -i yahs.out_scaffolds_final.fa \
+  -o BUSCO_Scut_YAHS \
+  -l /home/johnhen/Databases/tetrapoda_odb12 \
+  -m genome \
+  -c 32
+
+
+
+  Creating Contact Map:
+  conda install -c bioconda bedtools
+
+
+
+This worked to create the .bed file
+#!/bin/bash
+
+#SBATCH --job-name=RE_bed_parallel
+#SBATCH --output=RE_bed_parallel.out
+#SBATCH --error=RE_bed_parallel.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=50
+#SBATCH --mem=240gb
+#SBATCH --time=24:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+module load anaconda3/2023.09-0
+module load gnu-parallel/20220722
+source activate yahs_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+
+GENOME="yahs.out_scaffolds_final.fa"
+BEDFILE="arima_re_sites.bed"
+TMPDIR="./tmp_bed_chunks"
+THREADS=50
+
+mkdir -p $TMPDIR
+samtools faidx $GENOME
+
+export GENOME
+export TMPDIR
+
+# Function to search restriction motifs in one scaffold
+process_scaffold() {
+    name="$1"
+    seq=$(samtools faidx "$GENOME" "$name" | grep -v '^>' | tr -d '\n')
+
+    for motif in GATC TTAA GTAC; do
+        len=${#motif}
+        echo "$seq" | grep -bo "$motif" | \
+            awk -v chr="$name" -v len="$len" -v motif="$motif" -F: \
+            '{print chr"\t"$1"\t"($1+len)"\t"motif}'
+    done
+
+    # Handle GANTC (regex style)
+    echo "$seq" | grep -boP "GA.TC" | \
+        awk -v chr="$name" -v motif="GANTC" -F: \
+        '{print chr"\t"$1"\t"($1+5)"\t"motif}'
+}
+
+export -f process_scaffold
+
+# Run in parallel on each scaffold
+cut -f1 ${GENOME}.fai | parallel -j $THREADS process_scaffold {} > $TMPDIR/all_sites_unsorted.bed
+
+# Sort for Juicer compatibility
+sort -k1,1 -k2,2n $TMPDIR/all_sites_unsorted.bed > $BEDFILE
+
+# Cleanup
+rm -r $TMPDIR
+
+
+
+Time to run Juicer! Or at least try to....
+So first need to index the new scaffolded genome with:
+#!/bin/bash
+#SBATCH --job-name=bwa_yahs_align
+#SBATCH --output=bwa_yahs_align_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 32
+#SBATCH --mem 160gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/03_Yahs
+# Define variables
+THREADS=32
+READ1="1832_S1_R1_001_val_1.fq.gz"
+READ2="1832_S1_R2_001_val_2.fq.gz"
+GENOME="yahs.out_scaffolds_final.fa"
+OUT_BAM="blood_postyahs_hic_algn.bam"
+SORTED_BAM="blood_postyahs_hic_algn_sorted.bam"
+
+# Index genome if needed
+if [ ! -f "${GENOME}.bwt" ]; then
+    echo "[INFO] Indexing genome with BWA..."
+    bwa index $GENOME
+fi
+
+# Run BWA-MEM and process with samtools
+bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
+    samtools view -@ $THREADS -b -h -F 2316 - | \
+    samtools sort -@ $THREADS -o $SORTED_BAM
+
+# Index the sorted BAM
+samtools index $SORTED_BAM
+
+
+NOW SAME THING BUT FOR TURTLE
+#!/bin/bash
+#SBATCH --job-name=turtle_bwa_yahs_align
+#SBATCH --output=turtle_bwa_yahs_align_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 32
+#SBATCH --mem 160gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+
+cd project/viper/venom/John_Henry/Turtle
+# Define variables
+THREADS=32
+READ1="turtle_S4_R1_001_val_1.fq.gz"
+READ2="turtle_S4_R2_001_val_2.fq.gz"
+GENOME="yahs.out_scaffolds_final.fa"
+OUT_BAM="blood_postyahs_hic_algn.bam"
+SORTED_BAM="blood_postyahs_hic_algn_sorted.bam"
+
+# Index genome if needed
+if [ ! -f "${GENOME}.bwt" ]; then
+    echo "[INFO] Indexing genome with BWA..."
+    bwa index $GENOME
+fi
+
+# Run BWA-MEM and process with samtools
+bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
+    samtools view -@ $THREADS -b -h -F 2316 - | \
+    samtools sort -@ $THREADS -o $SORTED_BAM
+
+# Index the sorted BAM
+samtools index $SORTED_BAM
+
+
+
+
+
+Trying to get juicer
+ wget https://s3.amazonaws.com/hicfiles.tc4ga.com/public/juicer/juicer_tools_1.22.01.jar
+
+
+
+#!/bin/bash
+#SBATCH --job-name=juicer_pre
+#SBATCH --output=juicer_pre_sort.out
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 120gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+# Go to working directory
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/04_Contact_Map
+
+# Run juicer pre and pipe into sort
+juicer pre blood_hic_algn_sorted.bam \
+    yahs.out_scaffolds_final.agp \
+    CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta.fai | \
+sort -k2,2d -k6,6d -T ./ --parallel=24 -S120G | \
+awk 'NF' > hic-to-contigs.txt
+
+This creates the .txt file with the HiC associations
+
+Now Actually run juicer
+ java -Xmx32G -jar juicer_tools_1.22.01.jar pre hic-to-contigs.txt output.contact.map scaffolds_final.chrom.sizes
+
+
+ Oh my grief it worked
+ Use globus to move to your computer and then use https://aidenlab.org/juicebox/
+
+
+
+
+
+
+ OK TURTLE CONTACT MAP
+
+First: samtools faidx yahs.out_scaffolds_final.fa
+makes the .fai file I need
+
+
+Then get the sizes file
+cut -f1,2 yahs.out_scaffolds_final.fa.fai > scaffolds_final.chrom.sizes
+
+Ok now get the .txt file you need
+
+#!/bin/bash
+#SBATCH --job-name=juicer_turtle_pre
+#SBATCH --output=juicerturtle_pre_sort.out
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 120gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+# Go to working directory
+cd /project/viper/venom/John_Henry/Turtle/Contact_Map
+
+# Run juicer pre and pipe into sort
+juicer pre turtle_hic_algn_sorted.bam \
+    yahs.out_scaffolds_final.agp \
+    Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta.fai | \
+sort -k2,2d -k6,6d -T ./ --parallel=24 -S120G | \
+awk 'NF' > hic-to-contigs.txt
+
+
+java -Xmx32G -jar juicer_tools_1.22.01.jar pre hic-to-contigs.txt output.contact.map scaffolds_final.chrom.sizes
+
+
+====================> BLAST small scaffolds
+
+Started by writing python script to extract small scaffolds
+
+from Bio import SeqIO
+
+input_fasta = "yahs.out_scaffolds_final.fa"
+output_fasta = "small_scaffolds.fa"
+length_threshold = 1_000_000  # 1 Mb
+
+with open(output_fasta, "w") as out_handle:
+    for record in SeqIO.parse(input_fasta, "fasta"):
+        if len(record.seq) < length_threshold:
+            SeqIO.write(record, out_handle, "fasta")
+
+
+
+python extract_small_scaffolds.py
+
+BATCH JOB to create small_scaffolds_blast_results
+blastsmallscaffolds.job
+#!/bin/bash
+
+#SBATCH --job-name SmallBlast
+#SBATCH --output SmallBlast_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 120gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+# Move to the working directory
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/05_Contaminant_Screening
+
+# Run BLAST
+blastn -query small_scaffolds.fa \
+       -db blast/nt \
+       -out small_scaffolds_blast_results.tsv \
+       -evalue 1e-25 \
+       -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle" \
+       -num_threads 24
+
+
+Take the output from the batch job
+grep -i "bacteria" small_scaffolds_blast_results.tsv
+
+Now use python script to create flags for all taxa
+script name: parse_blast_taxa_with_flags.py
+
+
+from collections import defaultdict, Counter
+import csv
+
+blast_file = "small_scaffolds_blast_results.tsv"
+output_summary = "scaffold_taxa_summary_with_flags.tsv"
+
+# Keywords indicating contaminants
+contaminant_keywords = [
+    "homo sapiens", "bacteria", "fungi", "virus", "microbiome", "microbiota",
+    "escherichia", "staphylococcus", "bacillus", "mycoplasma", "saccharomyces",
+    "tragelaphus", "mus musculus", "bos taurus", "pan troglodytes", "primates"
+]
+
+# Keywords indicating your target organism or relatives
+target_keywords = [
+    "crotalus", "serpentes", "snake", "ophidia", "viper", "reptile", "boa", "python", "elaphe"
+]
+
+# Dictionary to hold scaffold -> list of taxon names
+scaffold_hits = defaultdict(list)
+
+with open(blast_file) as f:
+    reader = csv.reader(f, delimiter='\t')
+    for row in reader:
+        if len(row) < 13:
+            continue
+        scaffold = row[0].strip()
+        taxon = row[12].strip().lower()
+        scaffold_hits[scaffold].append(taxon)
+
+with open(output_summary, "w") as out:
+    out.write("Scaffold\tUnique_Taxa_Count\tTop_Taxa\tContaminant_Flag\tTarget_Flag\n")
+    for scaffold, taxa in scaffold_hits.items():
+        counts = Counter(taxa)
+        top_taxa = ", ".join(f"{name} ({count})" for name, count in counts.most_common(5))
+
+        # Flags
+        contaminant_flag = any(any(contam in taxon for contam in contaminant_keywords) for taxon in taxa)
+        target_flag = any(any(targ in taxon for targ in target_keywords) for taxon in taxa)
+
+        out.write(f"{scaffold}\t{len(counts)}\t{top_taxa}\t{contaminant_flag}\t{target_flag}\n")
+
+print(f"Flagged summary written to {output_summary}")
+
+
+Now to view this use:
+column -t -s $'\t' scaffold_taxa_summary_with_flags.tsv | less -S
+
+
+Used a different python script to automatically flag any scaffolds with non squamate as the main hit
+
+
+import csv
+
+# Customize this list with more if needed
+SQUAMATE_KEYWORDS = [
+    "crotalus", "bothrops", "boa", "python", "ophidia", "serpentes", "squamata", "viper", "podarcis", "zootoca", "carinascincus", "hemicordylus", "psuedonaja", "lepidochelys", "natator", "terrapene", "trachemys", "emys", "chelonia", "dermochelys", "mauremys", "chrysemys", "malaclemys", "gopherus", "malaclemys", "caretta", "eretmochelys", "chelonoidis", "candoia", "lacerta", "elaphe", "thamnophis", "gloydius", "ahaetulla", "sistrurus", "ovophis", "erythrolamprus", "pantherophis", "colubridae", "viperidae", "boidae", "lampropeltis", "natrix", "ophiophagus", "notechis", "agkistrodon", "pituophis", "malpolon", "hemorrhois", "trimeresurus"]
+
+
+input_file = "small_scaffolds_blast_results.tsv"
+output_file = "flagged_contaminant_scaffolds.tsv"
+
+seen_scaffolds = set()
+
+with open(input_file, "r") as infile, open(output_file, "w", newline="") as outfile:
+    reader = csv.reader(infile, delimiter="\t")
+    writer = csv.writer(outfile, delimiter="\t")
+
+    # Write header
+    writer.writerow(["Scaffold", "Percent_Identity", "Bit_Score", "Matched_Taxon", "Flagged_As"])
+
+    for row in reader:
+        scaffold = row[0]
+        pident = float(row[2])
+        bitscore = float(row[11])
+        stitle = row[12].lower()
+
+        if pident < 95:
+            continue  # Skip low identity hits
+
+        # Only flag the first high-confidence hit per scaffold
+        if scaffold in seen_scaffolds:
+            continue
+
+        # Determine if the hit is squamate or not
+        is_squamate = any(keyword in stitle for keyword in SQUAMATE_KEYWORDS)
+        flag = "non-squamate" if not is_squamate else "squamate"
+
+        if flag == "non-squamate":
+            writer.writerow([scaffold, pident, bitscore, stitle, flag])
+            seen_scaffolds.add(scaffold)
+
+
+
+Looking for non-squamate with high bit score and 
+
+
+can also grep for specific contaminants:
+grep -i "Homo sapiens" small_scaffolds_blast_results.tsv
+column -t -s $'\t' flagged_contaminant_scaffolds.tsv | less -S
+
+
+FOR THE TURTLE: SCAFFOLD 91 is the complete mitochondrial genome
+
+
+Now check the telomeric regions
+addded tidk to yahs_env
+tidk search -s TTAGGG \
+  --dir tidk_out \
+  --output Scutulatus_1832_trimmed \
+  --extension bedgraph \
+  yahs.out_trimmed_scaffolds_final.fa
+
+
+but did not create the .tsv file i need so I ran:
+tidk search -s TTAGGG \
+  --dir tidk_out \
+  --output Scutulatus_1832_trimmed \
+  yahs.out_trimmed_scaffolds_final.fa
+
+
+This worked now i need to run another thing to generate the graph:
+tidk plot \
+  --tsv tidk_out/Scutulatus_1832_trimmed_telomeric_repeat_windows.tsv \
+  --output tidk_out/Scutulatus_1832_telomere_plot
+
+
+
+Now for the turtle for telomere plot
+tidk search -s TTAGGG \
+  --dir tidk_out \
+  --output Turtle_trimmed \
+  yahs.out_scaffolds_final.fa
+
+
+This worked now i need to run another thing to generate the graph:
+tidk plot \
+  --tsv tidk_out/Turtle_trimmed_telomeric_repeat_windows.tsv \
+  --output tidk_out/Turtle_telomere_plot
+
+
+EDTA
+MAKING EDTA_env
+conda create -n EDTA
+conda activate EDTA
+mamba install -c conda-forge -c bioconda edta
+
+Got to get all the dependencies
+
+
+RAN EDTA ON TURTLE GENOME:
+#!/bin/bash
+
+#SBATCH --job-name EDTA_Turtle
+#SBATCH --output EDTA_Turtle_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate edta_env
+
+cd /project/viper/venom/John_Henry/Turtle/EDTA_out
+
+perl /home/johnhen/.conda/envs/edta_env/share/EDTA/EDTA.pl \
+--genome ../turtle_genome.fa \
+--species others \
+--step all \
+--sensitive 1 \
+--threads 24 \
+--force 1
+
+
+
+Then, used the following python script to see stats for repeat elements (summarize_EDTA.py)
+
+#!/usr/bin/env python3
+import pandas as pd
+import re
+
+# ==== Inputs ====
+tbl_file = "turtle_genome.fa.mod.EDTA.intact.fa.cln2.tbl"
+
+# Read genome size from header if you want
+genome_size = None
+with open(tbl_file) as f:
+    for line in f:
+        if line.startswith("total length:"):
+            m = re.search(r"total length:\s*([\d,]+) bp", line)
+            if m:
+                genome_size = int(m.group(1).replace(",", ""))
+            break
+if genome_size is None:
+    genome_size = 1.6e9  # fallback
+
+# ==== Parse the file ====
+data = []
+current_superclass = None
+
+with open(tbl_file) as f:
+    for line in f:
+        line = line.strip()
+        # Skip headers
+        if not line or line.startswith(("file name","sequences","total length","GC","bases masked","===","---")):
+            continue
+        # Match lines with numbers
+        m = re.search(r'(\d[\d,]*)\s*bp\s*(\d+\.\d+)?\s*%', line)
+        if m:
+            length = int(m.group(1).replace(",", ""))
+            # Determine the class name: remove colon and leading spaces
+            cls = line.split()[0].replace(":", "")
+            data.append((cls, length))
+
+# ==== Build DataFrame ====
+df = pd.DataFrame(data, columns=["TE_class", "bp_occupied"])
+df = df.groupby("TE_class", as_index=False).sum()
+df["percent_genome"] = (df["bp_occupied"] / genome_size) * 100
+df = df.sort_values("bp_occupied", ascending=False)
+
+# ==== Save + print ====
+out_file = "EDTA_repeat_summary.tsv"
+df.to_csv(out_file, sep="\t", index=False)
+print(df)
+print(f"\nSaved summary to {out_file}")
+
+
+NOW PREPARING FOR FUNANNOTATE
+conda create -n fun_env python=3.10
+
+
+OK first step is to soft-mask the genome (THIS STEP FAILED)(DONT DO THIS)
+
+perl /home/johnhen/.conda/envs/edta_env/share/EDTA/bin/make_masked.pl \
+ -genome turtle_genome.fa \
+ -rmout turtle_genome.fa.mod.EDTA.final/turtle_genome.fa.mod.EDTA.intact.fa.cln2.out \
+ -maxdiv 30 -minscore 1000 -minlen 1000 \
+ -hardmask 0 -misschar N -threads 80
+
+ 
+ Renamed output file:
+ mv turtle_genome.fa.new.masked turtle_genome.softmasked.fa
+
+ Now time to get an LAI score
+
+#!/bin/bash
+#SBATCH --job-name=LAI_turtle
+#SBATCH --output=LAI_turtle.out
+#SBATCH --error=LAI_turtle.err
+#SBATCH --time=48:00:00
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=120G
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+# Load your conda env with LTR_retriever installed
+module load anaconda3/2023.09-0
+source activate edta_env
+
+cd /project/viper/venom/John_Henry/Turtle/EDTA_out
+# Run LAI
+LAI -genome /project/viper/venom/John_Henry/Turtle/turtle_genome.fa \
+    -intact /project/viper/venom/John_Henry/Turtle/EDTA_out/turtle_genome.fa.mod.EDTA.intact.fa \
+    -bed /project/viper/venom/John_Henry/Turtle/EDTA_ou/turtle_genome.fa.mod.EDTA.intact.gff3 \
+    -output turtle_LAI \
+    -threads 20
+
+
+
+
+LAI -genome /project/viper/venom/John_Henry/Turtle/turtle_genome.fa -intact turtle_genome.fa.mod.EDTA.raw/LTR/turtle_genome.fa.mod.pass.list -all /turtle_genome.fa.mod.EDTA.combine/turtle_genome.fa.mod.LTR.raw.fa.preFriAug10925522025.RMoutput/turtle_genome.fa.mod.LTR.raw.fa.out -t 80
+
+
+
+Continuing with the TURTLE:
+Trying to run funannotate with Apptainer
+apptainer pull funannotate_latest.sif docker://nextgenusfs/funannotate:latest
+
+Ok that worked, then I linked to my apptainer environment all the tools in my bin:
+apptainer exec --bind /project/viper/venom/John_Henry/bin:/opt/tools funannotate_latest.sif bash
+
+Trying to run Funannotate train using an Apptainer
+
+
+#!/bin/bash
+
+#SBATCH --job-name FunannotateStep1
+#SBATCH --output FunannotateStep1_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 270gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+apptainer exec \
+    --bind /project/viper/venom/John_Henry/bin:/opt/tools,/project/viper/venom/John_Henry/Turtle/03_Funannotate:/data \
+    /project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_latest.sif \
+    funannotate train \
+        -i /data/turtle_genome.softmasked.fa \
+        -o /data/funannotate_train_output \
+        --left /data/Gjapo-CLP2966_RNA_Blood_R1_trim.fastq.gz \
+        --right /data/Gjapo-CLP2966_RNA_Blood_R2_trim.fastq.gz \
+        --max_intronlen 10000 \
+        --cpus 24
+
+
+
+        
+#!/bin/bash
+
+#SBATCH --job-name FunannotateStep2
+#SBATCH --output FunannotateStep2_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 300gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+apptainer exec \
+    --bind /project/viper/venom/John_Henry/bin:/opt/tools,/project/viper/venom/John_Henry/Turtle/03_Funannotate:/data \
+    /project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_latest.sif \
+    funannotate predict \
+        -i /data/turtle_genome.softmasked.fa \
+        -o /data/funannotate_predict_output \
+        --species "Geoemyda japonica" \
+        --rna_bam /data/funannotate_train_output/training/funannotate_train.coordSorted.bam \
+        --transcript_evidence /data/funannotate_train_output/training/funannotate_train.pasa.gff3 \
+        --cpus 24
+
+
+
+
+
+
+Alright trying to download InterProScan:
+wget https://ftp.ebi.ac.uk/pub/software/unix/iprscan/5/5.75-106.0/interproscan-5.75-106.0-64-bit.tar.gz
+
+
+
+Trying to get Funannotate_Annotate to work:
+
+#!/bin/bash
+#SBATCH --job-name FunannotateAnnotate
+#SBATCH --output FunannotateAnnotate_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 370gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+module load java/11.0.2
+
+
+cd /project/viper/venom/John_Henry/Turtle/03_Funannotate
+
+
+mkdir -p $ANNOTATE_OUTPUT
+
+# Run annotation (skip SignalP)
+apptainer exec \
+  --bind $TOOLS:/opt/tools,\
+$PREDICT_OUTPUT:/data/predictions,\
+$ANNOTATE_OUTPUT:/data/funannotate_annotate_output,\
+$FUNANNOTATE_DB:/funannotate_db \
+  --env FUNANNOTATE_DB=/funannotate_db \
+  $FUNANNOTATE_CONTAINER \
+  funannotate annotate \
+    -i /data/predictions \
+    -o /data/funannotate_annotate_output \
+    --species "Geoemyda japonica" \
+    --iprscan /funannotate_db/interproscan-5.75-106.0/interproscan.sh \
+    --skip_signalp \
+    --cpus 24
+
+
+
+Run EggNog, SignalP, and InterProScan separately
+====> InterProScan
+#!/bin/bash
+#SBATCH --job-name=InterProScan
+#SBATCH --output=InterProScan_output
+#SBATCH --error=InterProScan_error
+#SBATCH --nodes=1
+#SBATCH --partition=nodeviper
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=370gb
+#SBATCH --time=120:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+# Load Java (required by InterProScan)
+module load java/11.0.2
+
+INTERPROSCAN=/home/johnhen/Databases/funannotate_databases/interproscan-5.75-106.0/interproscan.sh
+INPUT=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output/predict_results/Geoemyda_japonica.proteins.fa
+OUTDIR=/project/viper/venom/John_Henry/Turtle/03_Funannotate/interproscan_output
+
+mkdir -p $OUTDIR
+
+$INTERPROSCAN \
+  -i $INPUT \
+  -f XML,GFF3,TSV \
+  -dp \
+  -cpu 24 \
+  -appl Pfam,SMART,TIGRFAM,CDD \
+  -iprlookup \
+  -goterms \
+
+
+
+========> EGGNOG MAPPER
+conda create -n eggnog_env bioconda -c eggnog-mapper
+
+download this database inside eggnog_mapper in the bin
+python download_eggnog_data.py -d data
+
+#!/bin/bash
+#SBATCH --job-name EggNOG
+#SBATCH --output EggNOG_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 100gb
+#SBATCH --time 48:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate eggnog_env
+
+cd /project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output/predict_results
+
+python /project/viper/venom/John_Henry/bin/eggnog-mapper/emapper.py -i Geoemyda_japonica.proteins.fa -o emapper --cpu 24
+
+=========>SignalP is Insane
+#!/bin/bash
+#SBATCH --job-name=SignalP
+#SBATCH --output=SignalP_output
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=100gb
+#SBATCH --time=48:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+INPUT=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output/predict_results/Geoemyda_japonica.proteins.fa
+OUTDIR=/project/viper/venom/John_Henry/Turtle/03_Funannotate/signalp_output
+PREFIX=Geoemyda_japonica
+
+mkdir -p $OUTDIR
+cd /project/viper/venom/John_Henry/bin/signalp/signalp5/bin || { echo "cd failed"; exit 1; }
+
+# Run SignalP
+./signalp \
+  -fasta $INPUT \
+  -org euk \
+  -format short \
+  -prefix $OUTDIR/$PREFIX
+
+
+
+
+
+Ok combine all results into Annotation:
+#!/bin/bash
+#SBATCH --job-name FunannotateAnnotate
+#SBATCH --output FunannotateAnnotate_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 370gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+module load java/11.0.2
+
+# Paths
+FUNANNOTATE_CONTAINER=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_latest.sif
+FUNANNOTATE_DB=/home/johnhen/Databases/funannotate_databases
+TOOLS=/project/viper/venom/John_Henry/bin
+PREDICT_OUTPUT=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output
+ANNOTATE_OUTPUT=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_annotate_output
+
+# External results
+EGGNOG=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output/predict_results/emapper.emapper.annotations
+IPRSCAN=/project/viper/venom/John_Henry/Turtle/03_Funannotate/interproscan_output/Geoemyda_japonica_iprscan.tsv
+SIGNALP=/project/viper/venom/John_Henry/Turtle/03_Funannotate/signalp_output/Geoemyda_japonica_summary.signalp5
+
+# Make sure annotate output directory exists
+mkdir -p $ANNOTATE_OUTPUT
+
+# Run annotation
+apptainer exec \
+  --bind $TOOLS:/opt/tools,\
+$PREDICT_OUTPUT:/data/predictions,\
+$ANNOTATE_OUTPUT:/data/funannotate_annotate_output,\
+$FUNANNOTATE_DB:/funannotate_db \
+  --env FUNANNOTATE_DB=/funannotate_db \
+  $FUNANNOTATE_CONTAINER \
+  funannotate annotate \
+    -i /data/predictions \
+    -o /data/funannotate_annotate_output \
+    --species "Geoemyda japonica" \
+    --eggnog $EGGNOG \
+    --iprscan $IPRSCAN \
+    --signalp $SIGNALP \
+    --cpus 24
+
+
+
+
+    Running BUSCO on proteins
+
+    busco -i CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o 02_Busco
+
+    busco -i Geoemyda_japonica.proteins.fa -l /home/johnhen/Databases/tetrapoda_odb12 -m protein -c 24 -o busco_annotation_check
+
+
+
+
+
+RepeatMasker -pa 24 -e ncbi -lib turtle_genome.fa.mod.EDTA.TElib.fa \
+    -dir ./EDTA_out \
+    -gff -xsmall turtle_genome.fa
+
+
+    TO RESOFT MASK THE GENOME
+
+    awk 'BEGIN{uc=lc=0} /^>/ {next} {
+    for(i=1;i<=length($0);i++){
+        c=substr($0,i,1); if(c~/[A-Z]/) uc++; else if(c~/[a-z]/) lc++;
+    }
+} END{printf "upper: %d\nlower: %d\npct_masked: %.2f\n", uc, lc, lc/(uc+lc)*100}' turtle_genome.fa.masked
+
+OK THIS LOOKS GOOD. NOW I JUST NEED TO RERUN ALL THESE STEPS....:/
+
+
+#!/bin/bash
+
+#SBATCH --job-name FunannotateStep1
+#SBATCH --output FunannotateStep1_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 270gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+apptainer exec \
+    --bind /project/viper/venom/John_Henry/bin:/opt/tools,/project/viper/venom/John_Henry/Turtle/03_Funannotate:/data \
+    /project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_latest.sif \
+    funannotate train \
+        -i /data/turtle_genome.fa.masked \
+        -o /data/funannotate_train_output \
+        --left /data/Gjapo-CLP2966_RNA_Blood_R1_trim.fastq.gz \
+        --right /data/Gjapo-CLP2966_RNA_Blood_R2_trim.fastq.gz \
+        --max_intronlen 30000 \
+        --cpus 24
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bcl2fastq -R 250718_VH01789_38_AACGL77HV --sample-sheet HiC_Sample_Sheet.csv -r 8 -p 15 -w 8 --no-lane-splitting -o fastq_multiC
+/project/cugbf/data/bioinfo/DOWNLOADS/CUGCL_NSQ/2025_07_18_HiC_Park_Jones
+
+
+1832 SCUTULATUS GENOME PIPELINE WITH BOTH HIC DATA!
+
+
+
+Ok starting over with Scutulatus with double HiC
+trim_galore \
+  --paired \
+  Parkinson_S2_R1_001.fastq.gz \
+  Parkinson_S2_R2_001.fastq.gz \
+  --cores 4
+
+
+  fastqc -t 2 Parkinson_S2_R1_001_val_1.fq.gz Parkinson_S2_R2_001_val_2.fq.gz
+
+  #Concatenate the R1s and the R2s into a single files:
+  cat 1832_HiC_S1_R1_Run1_val_1.fq.gz Parkinson_S2_R1_001_val_1.fq.gz > 1832_HiC_combined_R1.fq.gz
+cat 1832_HiC_S1_R2_Run1_val_2.fq.gz Parkinson_S2_R2_001_val_2.fq.gz > 1832_HiC_combined_R2.fq.gz
+ 
+
+
+ #Hifiasm with the concatenated files
+ #!/bin/bash
+
+#SBATCH --job-name 02_Hifiasm
+#SBATCH --output 02_Hifiasm_Output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 370gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/02_Hifiasm
+hifiasm -o 1832_assembled_blood_DoubleHiC -t 50 --h1 1832_HiC_combined_R1.fq.gz --h2 1832_HiC_combined_R2.fq.gz CLP1832_HiFi_reads.fastq.gz
+
+
+Output = 1832_assembled_blood_DoubleHiC.hic.p_ctg.gfa
+
+
+
+awk '/^S/{print ">"$2;print $3}' 1832_assembled_blood_DoubleHiC.hic.p_ctg.gfa > 1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta
+
+Need genome_env for bbstats.sh
+bbstats.sh -in=1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta &> 1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta.stats.txt
+
+#NOW TIME FOR BWA plus MEM
+#!/bin/bash
+#SBATCH --job-name=BWA+MEM_Scutulatus
+#SBATCH --output=BWA+MEM_Scutulatus
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Q32/03_BWA+MEM
+
+# Define variables
+THREADS=50
+READ1="1832_HiC_combined_R1.fq.gz"
+READ2="1832_HiC_combined_R2.fq.gz"
+GENOME="1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta"
+OUT_BAM="Scutulatus_hic_algn.bam"
+SORTED_BAM="Scutulatus_hic_algn_sorted.bam"
+
+# Index genome if needed
+if [ ! -f "${GENOME}.bwt" ]; then
+    echo "[INFO] Indexing genome with BWA..."
+    bwa index $GENOME
+fi
+
+# Run BWA-MEM and process with samtools
+bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
+    samtools view -@ $THREADS -b -h -F 2316 - | \
+    samtools sort -@ $THREADS -o $SORTED_BAM
+
+# Index the sorted BAM
+samtools index $SORTED_BAM
+
+
+Requires .fai file
+Run: (in yahs_env)
+samtools faidx 1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta
+
+
+#NOW TIME FOR YAHS
+#!/bin/bash
+
+#SBATCH --job-name 04_Yahs
+#SBATCH --output 04_Yahs_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Q32/04_Yahs
+yahs 1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta Scutulatus_hic_algn_sorted.bam
+
+#OK NOW GET SOME STATS FOR THIS GENOME
+genome_env
+bbstats.sh -in=yahs.out_scaffolds_final.fa &> yahs.out_scaffolds_final.fa.stats.txt
+
+
+
+Running BUSCO to see more stats
+#!/bin/bash
+
+#SBATCH --job-name 05_Busco
+#SBATCH --output 05_Busco_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 370gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate genome_env
+
+# Change to the directory where the scaffolded turtle genome is
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/05_Busco
+
+# Run BUSCO on the scaffolded genome
+busco \
+  -i yahs.out_scaffolds_final.fa \
+  -o BUSCO_Scut_YAHS \
+  -l /home/johnhen/Databases/tetrapoda_odb12 \
+  -m genome \
+  -c 32
+
+
+
+  ESTIMATE COVERAGE
+
+
+	samtools depth  hic_aln.sorted.bam | awk '{sum+=$3} END {print sum/NR}' >  hic_aln.sorted.bam_depth.txt
+	samtools stats  hic_aln.sorted.bam >  hic_aln.sorted.bam_alignmentstats.txt'
+
+
+
+    Trying to clean this up
+
+Going to try to run a bash script that runs all cutoffs simultaneously
+
+#!/bin/bash
+
+#SBATCH --job-name 01_Trimming.job
+#SBATCH --output 01_Trimming_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 4
+#SBATCH --mem 120gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/01_Trimming
+
+# Input files (current directory)
+R1="./Parkinson_S2_R1_001.fastq.gz"
+R2="./Parkinson_S2_R2_001.fastq.gz"
+
+# Output base directory
+OUTPUT_BASE="./TrimGalore_Out"
+mkdir -p $OUTPUT_BASE
+
+# Quality cutoffs to test
+for Q in 26 27 28 29
+do
+    OUTDIR="${OUTPUT_BASE}/Q${Q}"
+    mkdir -p $OUTDIR
+
+    trim_galore \
+        --paired \
+        --quality $Q \
+        --cores 4 \
+        --output_dir $OUTDIR \
+        $R1 $R2
+
+    # Run FastQC on the trimmed output
+    fastqc -o $OUTDIR -t 4 ${OUTDIR}/Parkinson_S2_R1_001_val_1.fq.gz ${OUTDIR}/Parkinson_S2_R2_001_val_2.fq.gz
+done
+
+
+trim_galore \
+  --paired \
+  Parkinson_S2_R1_001.fastq.gz \
+  Parkinson_S2_R2_001.fastq.gz \
+  --cores 4 \
+  --quality 30 \
+  --output_dir Q30
+
+
+
+OK TIME FOR ANNOTATION OF SCUTULATUS GENOME
+#!/bin/bash
+
+#SBATCH --job-name EDTA_Scut
+#SBATCH --output EDTA_Scut_output
+#SBATCH --nodes 1
+#SBATCH --partition nodeviper
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 240gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate edta_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/06_EDTA
+
+perl /home/johnhen/.conda/envs/edta_env/share/EDTA/EDTA.pl \
+--genome Scutulatus_Genome.fa \
+--species others \
+--step all \
+--sensitive 1 \
+--threads 24 \
+--force 1
+
+
+
+Run summarize_EDTA.py (I did this from inside edta_env)
+
+
+
+LAI -genome /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/04_Yahs/Scutulatus_Genome.fa -intact Scutulatus_Genome.fa.mod.EDTA.raw/LTR/Scutulatus_Genome.fa.mod.pass.list -all LAI_RMout/Scutulatus_Genome.fa.out -t 80
+
+LAI -genome Clepi-CLP2201_WGS_blood.p_ctg.fasta -intact Clepi-CLP2201_WGS_blood.p_ctg.fasta.mod.EDTA.raw/LTR/Clepi-CLP2201_WGS_blood.p_ctg.fasta.mod.pass.list -all Clepi-CLP2201_WGS_blood.p_ctg.fasta.mod.EDTA.anno/Clepi-CLP2201_WGS_blood.p_ctg.fasta.mod.out -t 80
+
+
+
+Trying this:
+RepeatMasker -pa 24 \
+  -lib /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/06_EDTA/Scutulatus_Genome.fa.mod.EDTA.raw/LTR/Scutulatus_Genome.fa.mod.LTR.raw.fa \
+  -dir LAI_RMout \
+  /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/04_Yahs/Scutulatus_Genome.fa
+  
+
+
+  
+
+STRUCTURAL VARIANTS
+
+
+sv_env
+Loaded minimap2, samtools, gfatools
+
+gfatools gfa2fa 1832_assembled_blood_DoubleHiC.hic.hap1.p_ctg.gfa > hap1.fa
+gfatools gfa2fa 1832_assembled_blood_DoubleHiC.hic.hap2.p_ctg.gfa > hap2.fa
+
+converted my gfa to fastas
+
+conda install -n sv_env -c bioconda mummer4 syri
+loaded into sv_env
+
+
+Now trying to run this out of the sv_env:
+
+nucmer --maxmatch -l 100 -c 500 hap1.fa hap2.fa -p hap1_vs_hap2
+
+This creates hap1_vs_hap2.delta
+
+
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/039/797/435/GCA_039797435.1_Cadamanteus_3dDNAHiC_1.2/GCA_039797435.1_Cadamanteus_3dDNAHiC_1.2_genomic.gff.gz
+
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/039/797/435/GCA_039797435.1_Cadamanteus_3dDNAHiC_1.2/GCA_039797435.1_Cadamanteus_3dDNAHiC_1.2_genomic.fna.gz
+
+
+SCUTULATUS CONTACT MAP
+First: samtools faidx Scutulatus_Genome.fa
+makes the .fai file I need
+
+
+Then get the sizes file
+cut -f1,2 Scutulatus_Genome.fa.fai > scaffolds_final.chrom.sizes
+
+Ok now get the .txt file you need
+
+#!/bin/bash
+#SBATCH --job-name=juicer_scut_pre
+#SBATCH --output=juicerscut_pre_sort.out
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 120gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+# Go to working directory
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/08_Contact_Map
+
+# Run juicer pre and pipe into sort
+juicer pre Scutulatus_hic_algn_sorted.bam \
+    yahs.out_scaffolds_final.agp \
+    1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta.fai | \
+sort -k2,2d -k6,6d -T ./ --parallel=24 -S120G | \
+awk 'NF' > hic-to-contigs.txt
+
+
+java -Xmx32G -jar juicer_tools_1.22.01.jar pre hic-to-contigs.txt output.contact.map scaffolds_final.chrom.sizes
+
+
+====================> BLAST small scaffolds
+
+Started by writing python script to extract small scaffolds
+
+from Bio import SeqIO
+
+input_fasta = "yahs.out_scaffolds_final.fa"
+output_fasta = "small_scaffolds.fa"
+length_threshold = 1_000_000  # 1 Mb
+
+with open(output_fasta, "w") as out_handle:
+    for record in SeqIO.parse(input_fasta, "fasta"):
+        if len(record.seq) < length_threshold:
+            SeqIO.write(record, out_handle, "fasta")
+
+
+
+python extract_small_scaffolds.py
+
+BATCH JOB to create small_scaffolds_blast_results
+blastsmallscaffolds.job
+#!/bin/bash
+
+#SBATCH --job-name SmallBlast
+#SBATCH --output SmallBlast_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 120gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+# Move to the working directory
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/05_Contaminant_Screening
+
+# Run BLAST
+blastn -query small_scaffolds.fa \
+       -db blast/nt \
+       -out small_scaffolds_blast_results.tsv \
+       -evalue 1e-25 \
+       -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle" \
+       -num_threads 24
+
+
+Take the output from the batch job
+grep -i "bacteria" small_scaffolds_blast_results.tsv
+
+Now use python script to create flags for all taxa
+script name: parse_blast_taxa_with_flags.py
+
+
+from collections import defaultdict, Counter
+import csv
+
+blast_file = "small_scaffolds_blast_results.tsv"
+output_summary = "scaffold_taxa_summary_with_flags.tsv"
+
+# Keywords indicating contaminants
+contaminant_keywords = [
+    "homo sapiens", "bacteria", "fungi", "virus", "microbiome", "microbiota",
+    "escherichia", "staphylococcus", "bacillus", "mycoplasma", "saccharomyces",
+    "tragelaphus", "mus musculus", "bos taurus", "pan troglodytes", "primates"
+]
+
+# Keywords indicating your target organism or relatives
+target_keywords = [
+    "crotalus", "serpentes", "snake", "ophidia", "viper", "reptile", "boa", "python", "elaphe"
+]
+
+# Dictionary to hold scaffold -> list of taxon names
+scaffold_hits = defaultdict(list)
+
+with open(blast_file) as f:
+    reader = csv.reader(f, delimiter='\t')
+    for row in reader:
+        if len(row) < 13:
+            continue
+        scaffold = row[0].strip()
+        taxon = row[12].strip().lower()
+        scaffold_hits[scaffold].append(taxon)
+
+with open(output_summary, "w") as out:
+    out.write("Scaffold\tUnique_Taxa_Count\tTop_Taxa\tContaminant_Flag\tTarget_Flag\n")
+    for scaffold, taxa in scaffold_hits.items():
+        counts = Counter(taxa)
+        top_taxa = ", ".join(f"{name} ({count})" for name, count in counts.most_common(5))
+
+        # Flags
+        contaminant_flag = any(any(contam in taxon for contam in contaminant_keywords) for taxon in taxa)
+        target_flag = any(any(targ in taxon for targ in target_keywords) for taxon in taxa)
+
+        out.write(f"{scaffold}\t{len(counts)}\t{top_taxa}\t{contaminant_flag}\t{target_flag}\n")
+
+print(f"Flagged summary written to {output_summary}")
+
+
+Now to view this use:
+column -t -s $'\t' scaffold_taxa_summary_with_flags.tsv | less -S
+
+
+Used a different python script to automatically flag any scaffolds with non squamate as the main hit
+
+
+import csv
+
+# Customize this list with more if needed
+SQUAMATE_KEYWORDS = [
+    "crotalus", "bothrops", "boa", "python", "ophidia", "serpentes", "squamata", "viper", "podarcis", "zootoca", "carinascincus", "hemicordylus", "psuedonaja", "lepidochelys", "natator", "terrapene", "trachemys", "emys", "chelonia", "dermochelys", "mauremys", "chrysemys", "malaclemys", "gopherus", "malaclemys", "caretta", "eretmochelys", "chelonoidis", "candoia", "lacerta", "elaphe", "thamnophis", "gloydius", "ahaetulla", "sistrurus", "ovophis", "erythrolamprus", "pantherophis", "colubridae", "viperidae", "boidae", "lampropeltis", "natrix", "ophiophagus", "notechis", "agkistrodon", "pituophis", "malpolon", "hemorrhois", "trimeresurus"]
+
+
+input_file = "small_scaffolds_blast_results.tsv"
+output_file = "flagged_contaminant_scaffolds.tsv"
+
+seen_scaffolds = set()
+
+with open(input_file, "r") as infile, open(output_file, "w", newline="") as outfile:
+    reader = csv.reader(infile, delimiter="\t")
+    writer = csv.writer(outfile, delimiter="\t")
+
+    # Write header
+    writer.writerow(["Scaffold", "Percent_Identity", "Bit_Score", "Matched_Taxon", "Flagged_As"])
+
+    for row in reader:
+        scaffold = row[0]
+        pident = float(row[2])
+        bitscore = float(row[11])
+        stitle = row[12].lower()
+
+        if pident < 95:
+            continue  # Skip low identity hits
+
+        # Only flag the first high-confidence hit per scaffold
+        if scaffold in seen_scaffolds:
+            continue
+
+        # Determine if the hit is squamate or not
+        is_squamate = any(keyword in stitle for keyword in SQUAMATE_KEYWORDS)
+        flag = "non-squamate" if not is_squamate else "squamate"
+
+        if flag == "non-squamate":
+            writer.writerow([scaffold, pident, bitscore, stitle, flag])
+            seen_scaffolds.add(scaffold)
+
+
+
+Looking for non-squamate with high bit score and 
+
+
+can also grep for specific contaminants:
+grep -i "Homo sapiens" small_scaffolds_blast_results.tsv
+column -t -s $'\t' flagged_contaminant_scaffolds.tsv | less -S
+
+
+FOR THE TURTLE: SCAFFOLD 91 is the complete mitochondrial genome
+
+
+Now check the telomeric regions
+addded tidk to yahs_env
+tidk search -s TTAGGG \
+  --dir tidk_out \
+  --output Scutulatus_1832_trimmed \
+  --extension bedgraph \
+  yahs.out_trimmed_scaffolds_final.fa
+
+
+but did not create the .tsv file i need so I ran:
+tidk search -s TTAGGG \
+  --dir tidk_out \
+  --output Scutulatus_1832_trimmed \
+  yahs.out_trimmed_scaffolds_final.fa
+
+
+This worked now i need to run another thing to generate the graph:
+tidk plot \
+  --tsv tidk_out/Scutulatus_1832_trimmed_telomeric_repeat_windows.tsv \
+  --output tidk_out/Scutulatus_1832_telomere_plot
+
+
+
+Now for the turtle for telomere plot
+tidk search -s TTAGGG \
+  --dir tidk_out \
+  --output Turtle_trimmed \
+  yahs.out_scaffolds_final.fa
+
+
+This worked now i need to run another thing to generate the graph:
+tidk plot \
+  --tsv tidk_out/Turtle_trimmed_telomeric_repeat_windows.tsv \
+  --output tidk_out/Turtle_telomere_plot
+
+
+
+  Ok trying ragtag with the adamanteus
+
+ragtag_env
+
+
+#!/bin/bash
+#SBATCH --job-name=ragtag_scut_adam
+#SBATCH --output=ragtag_scut_adam_output
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=120G
+#SBATCH --time=48:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+module load anaconda3/2023.09-0
+source activate ragtag_env
+
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/09_Adam_Alignment
+
+ragtag.py scaffold \
+    GCA_039797435.1_Cadamanteus_3dDNAHiC_1.2_genomic.fna \
+    Scutulatus_Genome.fa \
+    -o ragtag_out \
+    -t 32
+
+Now making a chromosome map using python:
+#!/usr/bin/env python3
+# scaffold_chromosome_map_ragtag_fixed_save.py
+# Robust scaffold-to-chromosome map for RagTag output (saves plot to file)
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# -----------------------------
+# INPUT FILES
+# -----------------------------
+ragtag_file = "ragtag_scaffold_summary.txt"  # tab-separated: ReferenceCM\tScaffold\tOrientation
+ref_map_file = "chromosome_map.txt"          # tab-separated: CMID\tChromosome
+
+# -----------------------------
+# LOAD AND CLEAN RAGTAG SUMMARY
+# -----------------------------
+ragtag = pd.read_csv(ragtag_file, sep="\t", header=None, names=["CM","Scaffold","Orientation"], dtype=str)
+
+# Drop blank/malformed rows
+ragtag = ragtag.dropna(subset=["CM","Scaffold","Orientation"])
+ragtag = ragtag[(ragtag["CM"].str.strip() != "") &
+                (ragtag["Scaffold"].str.strip() != "") &
+                (ragtag["Orientation"].str.strip() != "")]
+
+# Strip whitespace
+ragtag["CM"] = ragtag["CM"].str.strip()
+ragtag["Scaffold"] = ragtag["Scaffold"].str.strip()
+ragtag["Orientation"] = ragtag["Orientation"].str.strip()
+
+# Strip trailing _RagTag from CM IDs
+ragtag["CM"] = ragtag["CM"].str.replace(r"_RagTag$", "", regex=True)
+
+# -----------------------------
+# LOAD CHROMOSOME MAP
+# -----------------------------
+ref_map = pd.read_csv(ref_map_file, sep="\t", header=None, names=["CM","Chromosome"], dtype=str)
+ref_map = ref_map.dropna(subset=["CM","Chromosome"])
+ref_map["CM"] = ref_map["CM"].str.strip()
+ref_map["Chromosome"] = ref_map["Chromosome"].str.strip()
+
+# -----------------------------
+# MERGE
+# -----------------------------
+df = ragtag.merge(ref_map, on="CM", how="inner")
+
+# Warn if scaffolds didn't match
+missing_count = len(ragtag) - len(df)
+if missing_count > 0:
+    print(f"Warning: {missing_count} scaffolds in RagTag summary did not match chromosome map and were ignored.")
+
+# Check if there’s anything to plot
+if df.empty:
+    raise ValueError("No scaffolds to plot after merging. Check your input files.")
+
+# -----------------------------
+# SET SCAFFOLD LENGTH FOR PLOTTING
+# -----------------------------
+df["Length"] = 1  # default: equal width
+
+# -----------------------------
+# PLOT
+# -----------------------------
+chromosomes = sorted(df["Chromosome"].unique(), key=lambda x: (not x.isdigit(), x))
+
+fig_height = max(2, len(chromosomes)*0.6)
+fig, ax = plt.subplots(figsize=(15, fig_height))
+
+yticks = []
+ytlabels = []
+
+for i, chrom in enumerate(chromosomes):
+    chrom_scaffs = df[df["Chromosome"] == chrom]
+    start = 0
+    for _, row in chrom_scaffs.iterrows():
+        end = start + row["Length"]
+        color = "green" if row["Orientation"] == "+" else "red"
+        ax.barh(i, width=row["Length"], left=start, color=color, edgecolor="black")
+        ax.text(start + row["Length"]/2, i, row["Scaffold"], ha="center", va="center", fontsize=6)
+        start = end
+    yticks.append(i)
+    ytlabels.append(f"Chr {chrom}")
+
+ax.set_yticks(yticks)
+ax.set_yticklabels(ytlabels)
+ax.set_xlabel("Scaffolds (relative order)")
+ax.set_title("C. scutulatus scaffolds mapped to C. adamanteus chromosomes\nGreen=+ orientation, Red=- orientation")
+
+# Safe tight_layout
+try:
+    plt.tight_layout()
+except Exception as e:
+    print("Warning: tight_layout failed:", e)
+
+# -----------------------------
+# SAVE FIGURES
+# -----------------------------
+output_png = "scaffold_chromosome_map.png"
+output_pdf = "scaffold_chromosome_map.pdf"
+
+plt.savefig(output_png, dpi=300, bbox_inches="tight")
+plt.savefig(output_pdf, bbox_inches="tight")
+print(f"Plots saved to:\n - {output_png}\n - {output_pdf}")
+
+# Optional: show plot locally if running in GUI (not needed on HPC)
+# plt.show()
+
+
+
+TOXCODAN ON CHROMOSOME 9 and 16
+samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_like.fa
+samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
+
+
+
+
+
+
+
+
+FUNANNOTATE SCUTULAUTUS
+RepeatMasker -pa 24 -e ncbi -lib Scutulatus_Genome.fa.mod.EDTA.TElib.fa \
+    -dir ./EDTA_out \
+    -gff -xsmall Scutulatus_Genome.fa
+
+
+    Now confirm that the genome is softmasked:
+    
+    awk 'BEGIN{uc=lc=0} /^>/ {next} {
+    for(i=1;i<=length($0);i++){
+        c=substr($0,i,1); if(c~/[A-Z]/) uc++; else if(c~/[a-z]/) lc++;
+    }
+} END{printf "upper: %d\nlower: %d\npct_masked: %.2f\n", uc, lc, lc/(uc+lc)*100}' Scutulatus_Genome.fa.masked
+
+#!/bin/bash
+
+#SBATCH --job-name FunannotateTrain
+#SBATCH --output FunannotateTrain_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 350gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user johnhen@clemson.edu
+
+
+apptainer exec \
+    --bind /project/viper/venom/John_Henry/bin:/opt/tools,/project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/10_Funannotate:/data \
+    /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/10_Funannotate/funannotate_latest.sif \
+    funannotate train \
+        -i /data/Scutulatus_Genome.fa.masked \
+        -o /data/funannotate_train_output \
+        --left /data/Cscut-CLP1832_RNA_VG_R1_trim.fastq.gz \
+        --right /data/Cscut-CLP1832_RNA_VG_R2_trim.fastq.gz \
+        --max_intronlen 30000 \
+        --cpus 24
