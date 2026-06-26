@@ -83,3 +83,10 @@ vcftools \
   --out demographic_dataset
 # this dataset can be used for site frequency spectrum, which relies on maf
 # this dataset can be used for sNMF
+
+
+##############################################
+
+# bcftools 
+
+bcftools filter -i 'QUAL>20 & DP>10 & AF<0.01' input.vcf -o filtered.vcf
