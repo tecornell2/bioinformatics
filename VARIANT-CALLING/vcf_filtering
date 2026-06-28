@@ -84,6 +84,28 @@ vcftools \
 # this dataset can be used for site frequency spectrum, which relies on maf
 # this dataset can be used for sNMF
 
+#############################################
+## June 30 2026
+# STACKS filtering .vcf aligned to reference genome (hifi only)
+
+
+vcftools \
+  --vcf populations.snps.vcf \
+  --remove 0.75_missing_and_out.txt \
+  --minDP 5 \
+  --maxDP 30 \
+  --recode \
+  --out step1
+
+vcftools \
+  --vcf step1.recode.vcf \
+  --min-meanDP 5 \
+  --max-meanDP 40 \
+  --max-missing 0.7 \
+  --remove-indels \
+  --thin 141 \
+  --recode \
+  --out final
 
 ##############################################
 
