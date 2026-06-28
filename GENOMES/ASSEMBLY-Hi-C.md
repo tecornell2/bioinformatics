@@ -152,48 +152,47 @@ Documentation: https://busco.ezlab.org/
 #### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name=bwa_turtle_hic_align
-#SBATCH --output=bwa_turtle_hic_align_output
+#SBATCH --job-name=YaHs_align
+#SBATCH --output=03_YaHs_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 50
-#SBATCH --mem 240gb
-#SBATCH --time 72:00:00
+#SBATCH --cpus-per-task 32
+#SBATCH --mem 100gb
+#SBATCH --time 6:00:00
 #SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
+#SBATCH --mail-user tecorn@clemson.edu
 
+  module load bwa
   module load anaconda3/2023.09-0
-  source activate yahs_env
+  source activate yahs
+  module load samtools
 
-  cd /project/viper/venom/John_Henry/Turtle
+  cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/03_YaHs
+
   # Define variables
-  THREADS=50
-  READ1="turtle_S4_R1_001_val_1.fq.gz"
-  READ2="turtle_S4_R2_001_val_2.fq.gz"
-  GENOME="Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta"
-  OUT_BAM="turtle_hic_algn.bam"
-  SORTED_BAM="turtle_hic_algn_sorted.bam"
+  THREADS=32
+  R1="/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP3001_S7_R1_001_val_1.fq.gz"
+  R2="/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP3001_S7_R2_001_val_2.fq.gz"
+  REF="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/genome/Pegre-CLP3001_assembled_blood.fa"
+  OUT_BAM="Pegre-CLP3001_HiC_aligned.bam"
+  SORTED_BAM="Pegre-CLP3001_HiC_aligned_sorted.bam"
+
+# Input file type required for scaffolding: .fai
+  samtools faidx <reference>
 
   # Index genome if needed
   if [ ! -f "${GENOME}.bwt" ]; then
       echo "[INFO] Indexing genome with BWA..."
       bwa index $GENOME
-  fi
+  #fi
 
   # Run BWA-MEM and process with samtools
-  bwa mem -5SP -t $THREADS $GENOME $READ1 $READ2 | \
-      samtools view -@ $THREADS -b -h -F 2316 - | \
+  bwa mem -t $THREADS $REF $R1 $R2 | \
       samtools sort -@ $THREADS -o $SORTED_BAM
 
   # Index the sorted BAM
   samtools index $SORTED_BAM
-```
 
-### 5.1 File type conversion
-Input file type required for scaffolding: .fai
-Run:
-```sh
-samtools faidx Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta
 ```
 
 ## 6. Scaffolding [YaHs]
@@ -201,21 +200,18 @@ samtools faidx Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta
 #### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name Yahs
-#SBATCH --output Yahs_output
+#SBATCH --job-name=YaHs_align
+#SBATCH --output=03_YaHs_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 50
-#SBATCH --mem 240gb
-#SBATCH --time 72:00:00
+#SBATCH --cpus-per-task 32
+#SBATCH --mem 100gb
+#SBATCH --time 6:00:00
 #SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
+#SBATCH --mail-user tecorn@clemson.edu
 
-module load anaconda3/2023.09-0
-source activate yahs_env
-
-/project/viper/venom/John_Henry/Turtle
-yahs Turtle_assembled_blood_plusHiC.hic.p_ctg.fasta turtle_hic_algn_sorted.bam
+# YaHs
+  yahs $REF $SORTED_BAM
 ```
 
 # GENOME ANNOTATION
