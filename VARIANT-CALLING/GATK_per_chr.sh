@@ -1,12 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name 03_RAD-WGS_GATK_chr_parallel
-#SBATCH --output 03_GATK_nextRAD_WGS_chr_parallel_%j.out
-#SBATCH --error 03_GATK_nextRAD_WGS_chr_parallel_%j.err
+#SBATCH --job-name 03_RAD-WGS_GATK_chr
+#SBATCH --output 03_GATK_nextRAD_WGS_chr_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 32
 #SBATCH --partition nodeviper
 #SBATCH --constraint=cpu_gen_genoa
-#SBATCH --mem 128gb
+#SBATCH --mem 384gb
 #SBATCH --time 168:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
@@ -17,11 +16,8 @@ set -euo pipefail
 
 module load anaconda3/2023.09-0
 source activate bio
-
 module load samtools
-
-# If GNU parallel and/or GATK are modules on your cluster, uncomment/edit:
-module load parallel
+module load gnuparallel
 module load gatk/4
 
 BASE="/project/viper/venom/Taryn/Plestiodon/Pegregius"
@@ -30,22 +26,17 @@ OUTDIR="${BASE}/GATK/output_chr"
 SAMPLE_INFO="${BASE}/GATK/00_sample_sheet.txt"
 TMPDIR="/scratch/${USER}/gatk_chr_tmp"
 
-# File containing one contig/chromosome name per line.
+# File containing one contig/chromosome name per line
 CONTIG_LIST="${BASE}/WGS/genome/contigs.list"
 
-# Number of chromosomes/contigs processed at the same time.
-CHR_JOBS=8
-
-# Threads per HaplotypeCaller process.
+# Number of chromosomes/contigs processed at the same time
+CHR_JOBS=3
+# Threads per HaplotypeCaller process
 THREADS_PER_HC=4
 
-# Parallelism inside GenomicsDBImport for each chromosome.
-GENOMICSDB_READER_THREADS=4
-
 # Java memory per process. Make sure concurrent jobs fit inside total --mem.
-HC_JAVA_MEM="12g"
-GDB_JAVA_MEM="12g"
-GG_JAVA_MEM="12g"
+HC_JAVA_MEM="16g"
+JAVA_MEM="128g"
 
 export BASE REF OUTDIR SAMPLE_INFO TMPDIR CONTIG_LIST
 export THREADS_PER_HC GENOMICSDB_READER_THREADS
@@ -118,7 +109,7 @@ run_one_contig() {
 
     GVCF="${GVCF_DIR}/${SAMPLE}.${CONTIG}.g.vcf.gz"
 
-    echo "[$(date)] HaplotypeCaller: sample=${SAMPLE}, type=${TYPE}, contig=${CONTIG}"
+    echo "HaplotypeCaller: sample=${SAMPLE}, type=${TYPE}, contig=${CONTIG}"
 
     gatk --java-options "-Xmx${HC_JAVA_MEM} -Djava.io.tmpdir=${CHR_TMPDIR}" HaplotypeCaller \
       -R "$REF" \
@@ -135,22 +126,21 @@ run_one_contig() {
 
   ####################### GenomicsDBImport for this chromosome #######################
 
-  echo "[$(date)] GenomicsDBImport: contig=${CONTIG}"
+  echo "GenomicsDBImport: contig=${CONTIG}"
 
-  gatk --java-options "-Xmx${GDB_JAVA_MEM} -Xms4g -Djava.io.tmpdir=${CHR_TMPDIR}" GenomicsDBImport \
+  gatk --java-options "-Xmx${JAVA_MEM} -Xms4g -Djava.io.tmpdir=${CHR_TMPDIR}" GenomicsDBImport \
     --genomicsdb-workspace-path "$COHORT_DB" \
     --overwrite-existing-genomicsdb-workspace true \
     --sample-name-map "$SAMPLE_MAP" \
     --tmp-dir "$CHR_TMPDIR" \
-    --reader-threads "$GENOMICSDB_READER_THREADS" \
     -L "$CONTIG" \
     > "${LOG_DIR}/${CONTIG}.GenomicsDBImport.log" 2>&1
 
   ####################### Joint genotyping for this chromosome #######################
 
-  echo "[$(date)] GenotypeGVCFs: contig=${CONTIG}"
+  echo "GenotypeGVCFs: contig=${CONTIG}"
 
-  gatk --java-options "-Xmx${GG_JAVA_MEM} -Djava.io.tmpdir=${CHR_TMPDIR}" GenotypeGVCFs \
+  gatk --java-options "-Xmx${JAVA_MEM} -Djava.io.tmpdir=${CHR_TMPDIR}" GenotypeGVCFs \
     -R "$REF" \
     -V "gendb://${COHORT_DB}" \
     -O "$RAW_VCF" \
@@ -174,6 +164,17 @@ parallel \
   -j "$CHR_JOBS" \
   --joblog "${OUTDIR}/parallel_by_chromosome.log" \
   run_one_contig :::: "$CONTIG_LIST"
+
+
+
+
+
+
+
+
+
+
+
 
 
 
