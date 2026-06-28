@@ -294,62 +294,62 @@ If you are combining data from multiple runs, you can concatenate the reads into
 
   ###### VARIABLES
   THREADS=32
-  HIFI=""
-  BASE="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii"
-  R1="${BASE}/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/00_raw/"
-  R2="${BASE}00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/00_raw/"
-  REF="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/genome/Pegre-CLP3001_assembled_blood.fa"
-  OUT_BAM="Pegre-CLP3001_HiC_aligned.bam"
-  SORTED_BAM="Pegre-CLP3001_HiC_aligned_sorted.bam"
+  WORK_DIR="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii"
+  R1="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP2810_S4_R1_001.fastq.gz"
+  R2="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP2810_S4_R2_001.fastq.gz"
+  HIFI="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/01_concat/Nclar-CLP2810_WGS_blood_hifi_v2.fastq.gz"
+  OUTPUT1="Nclar-CLP2810_blood_hifi_hic"
 
-  ###### TRIM GALORE
-  source activate bio
-
-  mkdir -p 01_trim_galore
-  cd 01_trim_galore
+  cd $WORK_DIR
 
   ###### HIFIASM
-  cd /project/viper/venom/Taryn/Nerodia/Nclarkii/02_hifiasm
+  mkdir 01_hifiasm
+  cd 01_hifiasm
+
+  echo "Assembling draft genome with hifiasm..."
   hifiasm -o $OUTPUT1 -t $THREADS --h1 $R1 --h2 $R2 $HIFI
     
   # converts output file from hifiasm to .fasta file
-  awk '/^S/{print ">"$2;print $3}' $OUTPUT1.bp.p_ctg.gfa > $OUTPUT1.bp.p_ctg.fasta
+  awk '/^S/{print ">"$2;print $3}' ${OUTPUT1}.bp.p_ctg.gfa > ${OUTPUT1}.bp.p_ctg.fasta
   # bbstats
-  bbstats.sh in=$OUTPUT1.bp.p_ctg.fasta out=$OUTPUT1.bp.p_ctg.fasta.stats.txt Xmx64g
+  bbstats.sh in=${OUTPUT1}.bp.p_ctg.fasta out=${OUTPUT1}.bp.p_ctg.fasta.stats.txt Xmx64g
+  conda deactivate
 
-  ###### BUSCO
+  ### ### BUSCO
   source activate busco
 
-  cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/04_BUSCO
+  cd $WORK_DIR
+  mkdir 02_BUSCO
+  cd 02_BUSCO
 
-  busco -i Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta  -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c $THREADS -o 04_BUSCO
+
+  echo "Running BUSCO..."
+  busco -i ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c $THREADS
+  source deactivate
 
   ###### BWA MEM
   module load bwa
-  module load anaconda3/2023.09-0
-  source activate yahs
   module load samtools
 
-  REF="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/genome/Pegre-CLP3001_assembled_blood.fa"
-  OUT_BAM="Pegre-CLP3001_HiC_aligned.bam"
-  SORTED_BAM="Pegre-CLP3001_HiC_aligned_sorted.bam"
+  cd $WORK_DIR
+  mkdir 03_BWA-MEM
+  cd 03_BWA-MEM
 
-# Input file type required for scaffolding: .fai
-  samtools faidx <reference>
+  # generate fai
+  bwa index ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta
+  samtools faidx ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta
 
-  # Index genome
-  if [ ! -f "${GENOME}.bwt" ]; then
-      echo "[INFO] Indexing genome with BWA..."
-      bwa index $REF
-  #fi
-
-  # Run BWA-MEM and process with samtools
-  bwa mem -t $THREADS $REF $R1 $R2 | \
-      samtools sort -@ $THREADS -o $SORTED_BAM
-
-  # Index the sorted BAM
-  samtools index $SORTED_BAM
+  echo "Aligning HiC reads to BWA-MEM..."
+  bwa mem -t $THREADS ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta $R1 $R2 | \
+      samtools sort -@ $THREADS -o ${OUTPUT1}_sorted.bam
+  samtools index ${OUTPUT1}_sorted.bam
 
   ###### YAHS
+  source activate yahs
 
+  cd $WORK_DIR
+  mkdir 04_YaHs
+  cd 04_YaHs
+
+  echo "Scaffolding with YaHs..."
 ```
