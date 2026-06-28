@@ -1,29 +1,23 @@
 # GENOME ASSEMBLY
 
-The following pipeline is a general pipeline for PacBio HiFi genome assembly with HiC integration. It is heavily based on a free tutorial from Rhett Rautsaw (https://github.com/RhettRautsaw/Bioinformatics/blob/master/tutorials/HiFi_Genomics.md) and notes from PhD candidate John Henry.
+The following pipeline is a general pipeline for PacBio HiFi genome assembly with HiC integration. It is heavily based on a open source tutorials from Rhett Rautsaw (https://github.com/RhettRautsaw/Bioinformatics/blob/master/tutorials/HiFi_Genomics.md), Pedro Nachtigall (https://github.com/pedronachtigall/HI-genome-assembly-pipeline), and notes from PhD candidate John Henry.
 
-## 1. Raw Data
+## 00. Raw Data
+* Pacific Biosciences HiFi long reads are provided as one fastq file
+* Hi-C short reads are provided as rtwo fastq files (paired end)
+### 0.1 Concatenate 
+If you are combining data from multiple runs, you can concatenate the reads into one file for the subsequent analyses. 
+#### HiFi Example
+```Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz```
 
-### 1.1 Concatenate 
+### 0.2 Quality Check [Nanoplot]
 
-### HiFi raw data
-  ```sh
-  # concat hifi reads from different runs into a single file if needed
-  cat Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz
-  ```
-
-### Hi-C raw data
-  ```sh
-  #concat HiC R1s (forward) and the R2s (reverse) into a single file
-  cat 1832_HiC_S1_R1_Run1_val_1.fq.gz Parkinson_S2_R1_001_val_1.fq.gz > 1832_HiC_combined_R1.fq.gz
-  cat 1832_HiC_S1_R2_Run1_val_2.fq.gz Parkinson_S2_R2_001_val_2.fq.gz > 1832_HiC_combined_R2.fq.gz
-  ```
-### 1.2 Quality Check [Nanoplot]
-
-## 2. Trim [Trim Galore!]
+## 01. Trim [Trim Galore!]
 Documentation: https://github.com/FelixKrueger/TrimGalore
+```sh
 
-## 3. Assembly [hifiasm]
+```
+## 02. Assembly [hifiasm]
 
 #### .job file
 ```sh
@@ -61,7 +55,7 @@ hifiasm requires input reads in FASTQ format
 Resource: https://hifiasm.readthedocs.io/en/latest/interpreting-output.html 
 
 ---
-### 3.1 Stats on Assembly [bbstats]
+### 2.1 Stats on Assembly [bbstats]
 Run basic statistics on assmebly (N50) prior to next step.
 
 ```sh
@@ -119,7 +113,7 @@ Length          Scaffolds       Contigs         Length          Length          
 
 Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 
-## 4. Quality of Assembly [BUSCO]
+## 03. Quality of Assembly [BUSCO]
 
 #### .job file
 ```sh
@@ -147,7 +141,7 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 
 Documentation: https://busco.ezlab.org/ 
 
-## 5. Align and Index [BWA+MEM] [samtools]
+## 04. Align and Index [BWA+MEM] [samtools]
 
 #### .job file
 ```sh
