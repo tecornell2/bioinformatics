@@ -107,6 +107,25 @@ vcftools \
   --recode \
   --out final
 
+** After filtering, kept 168 out of 168 Individuals
+Outputting VCF file...
+After filtering, kept 860 out of a possible 6972639 Sites **
+
+vcftools \
+  --vcf step1.recode.vcf \
+  --mac 2
+  --min-meanDP 5 \
+  --max-meanDP 50 \
+  --max-missing 0.6 \
+  --remove-indels \
+  --thin 141 \
+  --recode \
+  --out sNMF
+
+** After filtering, kept 168 out of 168 Individuals
+Outputting VCF file...
+After filtering, kept 860 out of a possible 6972639 Sites **
+
 ##############################################
 
 # bcftools 
