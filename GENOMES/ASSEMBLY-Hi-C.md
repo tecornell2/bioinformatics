@@ -36,10 +36,10 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
   source activate hifiasm
 
   cd /project/viper/venom/Taryn/Nerodia/Nclarkii/02_hifiasm
-  hifiasm -o 1832_assembled_blood_DoubleHiC -t 50 --h1 1832_HiC_combined_R1.fq.gz --h2 1832_HiC_combined_R2.fq.gz CLP1832_HiFi_reads.fastq.gz
+hifiasm -o Pegre-CLP3001_assembled_blood_hic -t 32 --h1 CLP3001_S7_R1_001_val_1.fq.gz --h2 CLP3001_S7_R2_001_val_2.fq.gz Pegre-CLP3001_WGS_blood_hifi.fastq.gz
     
   # converts output .bp.p_ctg.gfa file from hifiasm to .fasta file for next steps
-  awk '/^S/{print ">"$2;print $3}' Nclar-CLP2810_assembled_blood.bp.p_ctg.gfa > Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta
+  awk '/^S/{print ">"$2;print $3}' Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.gfa > Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta
 ```
 
 hifiasm requires input reads in FASTQ format
@@ -59,7 +59,7 @@ Resource: https://hifiasm.readthedocs.io/en/latest/interpreting-output.html
 Run basic statistics on assmebly (N50) prior to next step.
 
 ```sh
-bbstats.sh in=Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta out=Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta.stats.txt Xmx64g
+bbstats.sh in=Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta out=Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta.stats.txt Xmx64g
 ```
 
 <details><summary> bbstats .txt output file</summary>
@@ -123,7 +123,7 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 50
-#SBATCH --mem 256gb
+#SBATCH --mem 120gb
 #SBATCH --time 72:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
@@ -133,10 +133,10 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
   source activate busco
 
   # change to directory with genome file
-  cd /project/viper/venom/Taryn/Nerodia/Nclarkii/04_BUSCO
+  cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/04_BUSCO
 
   # run BUSCO on genome
-  busco -i Nclar-CLP2810_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c 80 -o 04_BUSCO
+  busco -i Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta  -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c 50 -o 04_BUSCO
 ```
 
 Documentation: https://busco.ezlab.org/ 
