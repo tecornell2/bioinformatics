@@ -280,34 +280,5 @@ lib = library input file
 pa = parallel mode
 xsmall = masks repeats in the input genome sequence using soft-masking
 
-## 8. Annotation [funannotate]
-
-### 8.1 Training
-#### .job file
-```sh
-```
-
-### 8.2 Prediction
-#### .job file
-```sh
-```
-
-### 8.3 Updating
-#### .job file
-```sh
-```
-
-### 8.4 Annotation
-#### .job file
-```sh
-```
-
-## 9. Cleaning 
-
-
-
-
-
-
 
 
