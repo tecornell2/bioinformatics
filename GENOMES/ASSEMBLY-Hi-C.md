@@ -7,8 +7,8 @@ The following pipeline is a general pipeline for PacBio HiFi genome assembly wit
 * Hi-C short reads are provided as rtwo fastq files (paired end)
 ### 0.1 Concatenate 
 If you are combining data from multiple runs, you can concatenate the reads into one file for the subsequent analyses. 
-#### HiFi Example
-```Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz```
+  HiFi Example
+  ```Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz```
 
 ### 0.2 Quality Check [Nanoplot]
 
