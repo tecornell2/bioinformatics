@@ -5,13 +5,10 @@ The following pipeline is a general pipeline for PacBio HiFi genome assembly wit
 ## 00. Raw Data
 * Pacific Biosciences HiFi long reads are provided as one fastq file
 * Hi-C short reads are provided as rtwo fastq files (paired end)
-### 0.1 Concatenate 
-If you are combining data from multiple runs, you can concatenate the reads into one file for the subsequent analyses. 
-  HiFi Example
-  ```Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz```
 
-### 0.2 Quality Check [Nanoplot]
-
+### 0.2 Quality Check [fastQC]
+```sh
+```
 ## 01. Trim [Trim Galore!]
 Documentation: https://github.com/FelixKrueger/TrimGalore
 ```sh
@@ -22,13 +19,13 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
 #### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name 02_hifiiasm_Nclar
-#SBATCH --output 02_hifiasm_Nclar_output
+#SBATCH --job-name hifiasm
+#SBATCH --output hifiasm_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 40
-#SBATCH --mem 260gb
-#SBATCH --time 24:00:00
+#SBATCH --cpus-per-task 32
+#SBATCH --mem 100gb
+#SBATCH --time 3:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
@@ -118,8 +115,8 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 #### .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name 04_BUSCO_Nclar
-#SBATCH --output 04_BUSCO_Nclar_output
+#SBATCH --job-name BUSCO
+#SBATCH --output BUSCO_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 50
@@ -129,25 +126,22 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 #SBATCH --mail-user tecorn@clemson.edu
 
   module load anaconda3/2023.09-0
-  # activate conda environment busco
   source activate busco
 
-  # change to directory with genome file
   cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/04_BUSCO
 
-  # run BUSCO on genome
   busco -i Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta  -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c 50 -o 04_BUSCO
 ```
 
 Documentation: https://busco.ezlab.org/ 
 
-## 04. Align and Index [BWA+MEM] [samtools]
+## 03. Align and Index [BWA+MEM] [samtools]
 
 #### .job file
 ```sh
 #!/bin/bash
 #SBATCH --job-name=YaHs_align
-#SBATCH --output=03_YaHs_output
+#SBATCH --output=YaHs_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 32
@@ -189,7 +183,7 @@ Documentation: https://busco.ezlab.org/
 
 ```
 
-## 6. Scaffolding [YaHs]
+## 6. Scaffold [YaHs]
 
 #### .job file
 ```sh
@@ -274,5 +268,88 @@ lib = library input file
 pa = parallel mode
 xsmall = masks repeats in the input genome sequence using soft-masking
 
+ ---
+ Notes
+ ### 0.1 Concatenate 
+If you are combining data from multiple runs, you can concatenate the reads into one file for the subsequent analyses. 
+  HiFi Example
+  ```Nfasc-CLP2811_WGS_blood_hifi-1.fastq.gz Nfasc-CLP2811_WGS_blood_hifi-2.fastq.gz > Nfasc-CLP2811_WGS_blood_hifi_v2.fastq.gz```
 
+---
+```sh
+## SLURM script
 
+#!/bin/bash
+#SBATCH --job-name genome_assembly_hifi_hic
+#SBATCH --output genome_assembly_hifi_hic_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 256gb
+#SBATCH --time 24:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+  module load anaconda3/2023.09-0
+
+  ###### VARIABLES
+  THREADS=32
+  HIFI=""
+  BASE="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii"
+  R1="${BASE}/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/00_raw/"
+  R2="${BASE}00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/00_raw/"
+  REF="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/genome/Pegre-CLP3001_assembled_blood.fa"
+  OUT_BAM="Pegre-CLP3001_HiC_aligned.bam"
+  SORTED_BAM="Pegre-CLP3001_HiC_aligned_sorted.bam"
+
+  ###### TRIM GALORE
+  source activate bio
+
+  mkdir -p 01_trim_galore
+  cd 01_trim_galore
+
+  ###### HIFIASM
+  cd /project/viper/venom/Taryn/Nerodia/Nclarkii/02_hifiasm
+  hifiasm -o $OUTPUT1 -t $THREADS --h1 $R1 --h2 $R2 $HIFI
+    
+  # converts output file from hifiasm to .fasta file
+  awk '/^S/{print ">"$2;print $3}' $OUTPUT1.bp.p_ctg.gfa > $OUTPUT1.bp.p_ctg.fasta
+  # bbstats
+  bbstats.sh in=$OUTPUT1.bp.p_ctg.fasta out=$OUTPUT1.bp.p_ctg.fasta.stats.txt Xmx64g
+
+  ###### BUSCO
+  source activate busco
+
+  cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/04_BUSCO
+
+  busco -i Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta  -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c $THREADS -o 04_BUSCO
+
+  ###### BWA MEM
+  module load bwa
+  module load anaconda3/2023.09-0
+  source activate yahs
+  module load samtools
+
+  REF="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/genome/Pegre-CLP3001_assembled_blood.fa"
+  OUT_BAM="Pegre-CLP3001_HiC_aligned.bam"
+  SORTED_BAM="Pegre-CLP3001_HiC_aligned_sorted.bam"
+
+# Input file type required for scaffolding: .fai
+  samtools faidx <reference>
+
+  # Index genome
+  if [ ! -f "${GENOME}.bwt" ]; then
+      echo "[INFO] Indexing genome with BWA..."
+      bwa index $REF
+  #fi
+
+  # Run BWA-MEM and process with samtools
+  bwa mem -t $THREADS $REF $R1 $R2 | \
+      samtools sort -@ $THREADS -o $SORTED_BAM
+
+  # Index the sorted BAM
+  samtools index $SORTED_BAM
+
+  ###### YAHS
+
+```
