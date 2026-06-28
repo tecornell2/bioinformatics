@@ -27,25 +27,36 @@
     # view contents of a file in the terminal
     cat filename
 
-    # edit a file
+    # edit and/or create a file
     nano filename
 
 ```
 
 ## .bashrc
+```sh
+cd ~
+nano .bashrc
+```
 
 ```sh
+### edit text inside .bashrc file
+### this is what is in mine (all optional)
 # color styles
 # export PS1='\[\033[0;32m\]\u@\h\[\033[00m\]:\[\033[0;37m\]\w\[\033[00m\]\$ '
 export PS1='\[$(tput setaf 15)\](\[$(tput setaf 70)\]\u\[$(tput setaf 15)\]@\[$(tput setaf 214)\]\h\[$(tput setaf 15)\])-[ \[$(tput setaf 38)\]\w\[$(tput setaf 15)\]]\[$(tput sgr0)\]$ '
 
 ## aliases
 
+# environment and packages shorthand
 alias conda3='module load anaconda3/2023.09-0'
 alias assembly='source activate asm_env'
 alias r_stat='module load r/4.3.0'
-alias interactive='salloc --nodes=1 --ntasks-per-node=1 --cpus-per-task=16 --mem=48G --time=12:00:00'
+
+# shorthand for navigation
 alias nero='cd /project/viper/venom/Taryn/Nerodia/'
+
+# misc batch job and interactive job
+alias interactive='salloc --nodes=1 --ntasks-per-node=1 --cpus-per-task=16 --mem=48G --time=12:00:00'
 alias save_scratch='find /scratch/tecorn -used tecorn -exec touch {} +'
 alias check='squeue -u tecorn'
 ```
@@ -76,7 +87,7 @@ Resource for altering bash prompt: https://robotmoon.com/bash-prompt-generator/ 
  # create environment (ex. assembly environmnet) to save packages (hifiasm)
  # the addition of mamba loads mamba while creating the environment
  conda create -n hifiasm mamba
- source activate hifiasm
+ conda activate hifiasm
  mamba install -c bioconda hifiasm
 ```
 
@@ -84,44 +95,13 @@ Resource for altering bash prompt: https://robotmoon.com/bash-prompt-generator/ 
  module load anaconda3/2023.09
  # create enviornment for BBMap (includes bbstats, samtools)
  conda create -n bbmap mamba
- source activate bbmap
+ conda activate bbmap
  mamba install -c bioconda bbmap
 ```
 
 ```sh
 conda create -n edta mamba
-source activate edta
+conda activate edta
 mamba install -c conda-forge -c bioconda edta
-```
-
-```sh
-conda create -n blob
-source activate blob
-pip install blobtoolkit[full] 
-```
-
-```sh
-conda create -n pasa mamba
-source activate pasa
-mamba install -c bioconda pasa
-```
-
-```sh
-conda create -n eggnog mamba
-source activate eggnog
-mamba install -c bioconda eggnog-mapper
-```
-
-## overwriting
-```sh
-module load anaconda3/2023.09
-source activate env
-# if a package is not using the correct version of a dependency, it cna be over written
-# use module list for a lits of managed packages on the HPC
-module load minimap2/2.17
-
-```
-
-
-
+``
 
