@@ -284,7 +284,7 @@ If you are combining data from multiple runs, you can concatenate the reads into
 #SBATCH --output genome_assembly_hifi_hic_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
+#SBATCH --cpus-per-task 40
 #SBATCH --mem 256gb
 #SBATCH --time 24:00:00
 #SBATCH --mail-type ALL
@@ -298,21 +298,19 @@ If you are combining data from multiple runs, you can concatenate the reads into
   R1="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP2810_S4_R1_001.fastq.gz"
   R2="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP2810_S4_R2_001.fastq.gz"
   HIFI="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/01_concat/Nclar-CLP2810_WGS_blood_hifi_v2.fastq.gz"
-  OUTPUT1="Nclar-CLP2810_blood_hifi_hic"
-
-  cd $WORK_DIR
+  OUTPUT="Nclar-CLP2810_blood_hifi_hic"
 
   ###### HIFIASM
+  source activate hifiasm
+
+  cd $WORK_DIR
   mkdir 01_hifiasm
   cd 01_hifiasm
 
   echo "Assembling draft genome with hifiasm..."
-  hifiasm -o $OUTPUT1 -t $THREADS --h1 $R1 --h2 $R2 $HIFI
-    
-  # converts output file from hifiasm to .fasta file
-  awk '/^S/{print ">"$2;print $3}' ${OUTPUT1}.bp.p_ctg.gfa > ${OUTPUT1}.bp.p_ctg.fasta
-  # bbstats
-  bbstats.sh in=${OUTPUT1}.bp.p_ctg.fasta out=${OUTPUT1}.bp.p_ctg.fasta.stats.txt Xmx64g
+  hifiasm -o $OUTPUT -t $THREADS --h1 $R1 --h2 $R2 $HIFI
+  awk '/^S/{print ">"$2;print $3}' ${OUTPUT}.bp.p_ctg.gfa > ${OUTPUT}.bp.p_ctg.fasta
+  bbstats.sh in=${OUTPUT}.bp.p_ctg.fasta out=${OUTPUT}.bp.p_ctg.fasta.stats.txt Xmx64g
   conda deactivate
 
   ### ### BUSCO
@@ -322,9 +320,8 @@ If you are combining data from multiple runs, you can concatenate the reads into
   mkdir 02_BUSCO
   cd 02_BUSCO
 
-
   echo "Running BUSCO..."
-  busco -i ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c $THREADS
+  busco -i ../01_hifiasm/${OUTPUT}.bp.p_ctg.fasta -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c $THREADS
   source deactivate
 
   ###### BWA MEM
@@ -335,14 +332,14 @@ If you are combining data from multiple runs, you can concatenate the reads into
   mkdir 03_BWA-MEM
   cd 03_BWA-MEM
 
-  # generate fai
-  bwa index ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta
-  samtools faidx ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta
+  cp ../01_hifiasm/${OUTPUT}.bp.p_ctg.fasta .
+  bwa index ${OUTPUT}.bp.p_ctg.fasta
+  samtools faidx ${OUTPUT}.bp.p_ctg.fasta
 
   echo "Aligning HiC reads to BWA-MEM..."
-  bwa mem -t $THREADS ../01_hifiasm/${OUTPUT1}.bp.p_ctg.fasta $R1 $R2 | \
-      samtools sort -@ $THREADS -o ${OUTPUT1}_sorted.bam
-  samtools index ${OUTPUT1}_sorted.bam
+  bwa mem -t $THREADS ../01_hifiasm/${OUTPUT}.bp.p_ctg.fasta $R1 $R2 | \
+      samtools sort -@ $THREADS -o ${OUTPUT}_sorted.bam
+  samtools index ${OUTPUT}_sorted.bam
 
   ###### YAHS
   source activate yahs
@@ -352,4 +349,5 @@ If you are combining data from multiple runs, you can concatenate the reads into
   cd 04_YaHs
 
   echo "Scaffolding with YaHs..."
+  yahs ../03_BWA-MEM/${OUTPUT}.bp.p_ctg.fasta ../03_BWA-MEM/${OUTPUT}_sorted.bam
 ```
