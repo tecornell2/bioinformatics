@@ -1,45 +1,27 @@
-# BAM Coverage Map
+# BAM coverage calculator
 
 ```sh
-library(tidyverse)
+library(dplyr)
+library(data.table)
 
-dat <- read_tsv(
-  "CLPT1251_depth.txt",
-  col_names = c("contig", "position", "depth"),
-  show_col_types = FALSE
+setwd("/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/02_align/CLPT1251/")
+
+dat <- fread(
+  "CLPT1251_depth.txt"
 )
 
-# number of positions with 0 depth
-sum(dat$depth == 0, na.rm =T)
+colnames(dat) <- c('CHROM', 'POS', 'DEPTH')
 
-
-dat_by_contig <- dat %>%
-  group_split(contig, .keep = TRUE)
-
-names(dat_by_contig) <- dat %>%
-  distinct(contig) %>%
-  pull(contig)
-
-depth %>%
+dat %>%
   summarise(
-    pct_1x = mean(depth >= 1),
-    pct_5x = mean(depth >= 5),
-    pct_10x = mean(depth >= 10),
-    pct_20x = mean(depth >= 20),
-    pct_30x = mean(depth >= 30)
+    prop_epth_0  = mean(DEPTH == 0, na.rm = TRUE),
+    prop_epth_1x  = mean(DEPTH == 1, na.rm = TRUE),
+    prop_DEPTH_1_5x  = mean(DEPTH >= 1 & DEPTH <= 5, na.rm = TRUE),
+    prop_DEPTH_5_10x = mean(DEPTH >= 5 & DEPTH <= 10, na.rm = TRUE),
+    prop_DEPTH_10_20x = mean(DEPTH >= 10 & DEPTH <= 20, na.rm = TRUE),
+    prop_DEPTH_20_30x = mean(DEPTH >= 20 & DEPTH <= 30, na.rm = TRUE),
+    prop_DEPTH_over30x = mean(DEPTH >= 31, na.rm = TRUE)
   )
-
-# plot across chr
-ggplot(dat_by_contig[["ptg000001l"]], aes(x = position, y = depth)) +
-  geom_line(linewidth = 0.2) +
-  labs(x = "Position on ptg000001l",
-    y = "Depth",
-    title = "Coverage across ptg000001l") +
-  ylim(0,100) +
-  theme_bw()
-
-ggsave("ptg000001l_plot_test.png")
-
 ```
 
 # karyoploteR package
