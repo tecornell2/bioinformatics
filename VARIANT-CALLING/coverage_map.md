@@ -1,14 +1,32 @@
 # BAM coverage calculator
 
 ```sh
+#!/bin/bash
+
+Rscript BAM_depth_proportions_calc
+```
+
+```sh
 library(dplyr)
 library(data.table)
+library(argparser)
 
-setwd("/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/02_align/CLPT1251/")
+# capture terminal arguments as a character vector
+args <- commandArgs(trailingOnly = TRUE)
 
-dat <- fread(
-  "CLPT1251_depth.txt"
-)
+# Verify if an argument was actually provided
+if (length(args) == 0 || file_ext(args) != "txt") {
+  stop("Error: No .txt file provided", call. = FALSE)
+}
+
+# read in file
+argi <- arg_parser(description = "This Rscript will create an relief-shaded admixture map in pdf format from in input admixture dataframe and a coordinates file. 
+                                  The script requires the R libraries 'terra', 'mapmixture', 'ggplot2', 'gridExtra', and 'argsparser'.
+                                  See README.txt for more information.", name = "MapMixture for All!")
+
+argi <- add_argument(argi, arg = 'samtools_depth_output', help = "The samtools depth txt file is the output of the command samtools depth <.bam> < filename_depth.txt")
+
+args <- parse_args(argi)
 
 colnames(dat) <- c('CHROM', 'POS', 'DEPTH')
 
