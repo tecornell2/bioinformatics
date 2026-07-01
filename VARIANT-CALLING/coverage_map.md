@@ -30,16 +30,18 @@ args <- parse_args(argi)
 
 colnames(dat) <- c('CHROM', 'POS', 'DEPTH')
 
-dat %>%
+table <- dat %>%
   summarise(
-    prop_epth_0  = mean(DEPTH == 0, na.rm = TRUE),
+    prop_depth_0  = mean(DEPTH == 0, na.rm = TRUE),
     prop_epth_1x  = mean(DEPTH == 1, na.rm = TRUE),
-    prop_DEPTH_1_5x  = mean(DEPTH >= 1 & DEPTH <= 5, na.rm = TRUE),
-    prop_DEPTH_5_10x = mean(DEPTH >= 5 & DEPTH <= 10, na.rm = TRUE),
-    prop_DEPTH_10_20x = mean(DEPTH >= 10 & DEPTH <= 20, na.rm = TRUE),
-    prop_DEPTH_20_30x = mean(DEPTH >= 20 & DEPTH <= 30, na.rm = TRUE),
-    prop_DEPTH_over30x = mean(DEPTH >= 31, na.rm = TRUE)
+    prop_depth_1_5x  = mean(DEPTH >= 1 & DEPTH <= 5, na.rm = TRUE),
+    prop_depth_5_10x = mean(DEPTH >= 5 & DEPTH <= 10, na.rm = TRUE),
+    prop_depth_10_20x = mean(DEPTH >= 10 & DEPTH <= 20, na.rm = TRUE),
+    prop_depth_20_30x = mean(DEPTH >= 20 & DEPTH <= 30, na.rm = TRUE),
+    prop_depth_over30x = mean(DEPTH >= 31, na.rm = TRUE)
   )
+
+write_table("CLPT1258")
 ```
 
 # karyoploteR package
