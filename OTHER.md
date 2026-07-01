@@ -110,3 +110,17 @@ quit()
 # run an Rscript in terminal
 Rscript <name>
 ```
+
+#### for loop example
+```sh
+for dir in */; do 
+	dir="${dir%/}"
+	bam="./${dir}/${dir}_aligned_sorted_marked_RG.bam"
+	if [[ -f "$bam" ]]; then 
+		samtools depth -@ 8 "$bam" > "${dir}_depth.txt"
+		echo "Report generated for $dir"
+	else 
+		echo "No BAM file found"
+	fi
+done
+```
