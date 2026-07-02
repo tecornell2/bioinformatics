@@ -53,7 +53,7 @@ Resource: https://hifiasm.readthedocs.io/en/latest/interpreting-output.html
 
 ---
 ### 2.1 Stats on Assembly [bbstats]
-Run basic statistics on assmebly (N50) prior to next step.
+Run basic statistics on assmebly prior to next step.
 
 ```sh
 bbstats.sh in=Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta out=Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta.stats.txt Xmx64g
@@ -135,7 +135,7 @@ Reference Article: https://www.pacb.com/blog/beyond-contiguity/
 
 Documentation: https://busco.ezlab.org/ 
 
-## 03. Align and Index [BWA+MEM] [samtools]
+## 04. Align and Index [BWA+MEM] [samtools]
 
 #### .job file
 ```sh
@@ -183,7 +183,7 @@ Documentation: https://busco.ezlab.org/
 
 ```
 
-## 6. Scaffold [YaHs]
+## 05. Scaffold [YaHs]
 
 #### .job file
 ```sh
@@ -198,12 +198,63 @@ Documentation: https://busco.ezlab.org/
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
-# YaHs
-  yahs $REF $SORTED_BAM
+ ###### YAHS                                                                                                                                                                                                                                     
+  source activate yahs                                                                                                                                                                                                                            
+
+  cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome
+  mkdir 04_YaHs
+  cd 04_YaHs
+
+  yahs ../03_BWA-MEM/Pegre-CLP3001_blood_hifi.hic.p_ctg.fasta ../03_BWA-MEM/Pegre-CLP3001_hic_aligned_sorted.bam
 ```
 
-## 7. Pre-text Viewer
+### 5.1 Stats on Assembly [bbstats]
+Run basic statistics on assmebly (N50) prior to next step.
+
 ```sh
+bbstats.sh in=Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta out=Pegre-CLP3001_assembled_blood_hic.bp.p_ctg.fasta.stats.txt Xmx64g
+```
+
+## 06. Pre-text Viewer
+```sh
+#!/bin/bash
+#SBATCH --job-name=Pegre-PretextMap
+#SBATCH --output=Pegre-PretextMap_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 32
+#SBATCH --mem 100gb
+#SBATCH --time 20:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
+
+  module load anaconda3/2023.09-0
+  source activate pretext
+  module load bwa
+  module load samtools
+
+  cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/05_PretextMap
+
+  # Define variables
+  THREADS=32
+  R1="/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP3001_S7_R1_001_val_1.fq.gz"
+  R2="/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP3001_S7_R2_001_val_2.fq.gz"
+  REF="/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/04_YaHs/Pegre-CLP3001_hifi_hic_scaffold_genome.fasta"
+  SORTED_BAM="Pegre-CLP3001_HiC_scaffold_aligned_sorted.bam"
+
+  samtools faidx $REF
+
+  if [ ! -f "${REF}.bwt" ]; then
+      echo "[INFO] Indexing genome with BWA..."
+      bwa index $REF
+  fi
+
+  bwa mem -t $THREADS $REF $R1 $R2 | \
+      samtools sort -@ $THREADS -o $SORTED_BAM
+
+  samtools index $SORTED_BAM
+
+  samtools view -h $SORTED_BAM | PretextMap -o Pegre-CLP3001_hic_map.standard.pretext
 ```
 
 # GENOME ANNOTATION
