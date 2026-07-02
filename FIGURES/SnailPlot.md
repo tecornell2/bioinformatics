@@ -6,7 +6,7 @@
 # create anaconda environment
 module load anaconda3/2023.09-0
 conda create -n blob
-conda activate blob
+source activate blob
 pip install blobtoolkit[full]
 
 # fetch api and viewer binaries
@@ -22,7 +22,7 @@ chmod 755 blobtoolkit-*
 ## Create directory
 ```sh
 # create directory
-conda activate blob
+source activate blob
 blobtools create --fasta Nerodia_clarkii.fasta --meta Nerodia_clarkii.yaml --taxdump ~/taxdump Nerodia_clarkii
 
 # add data set to directory
