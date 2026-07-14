@@ -14,6 +14,12 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
 ```sh
 
 ```
+
+### 1.1 Clean Contamination [kraken2]
+```sh
+
+```
+
 ## 02. Assembly [hifiasm]
 
 #### .job file
