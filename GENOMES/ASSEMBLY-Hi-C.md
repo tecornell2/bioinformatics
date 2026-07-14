@@ -17,7 +17,40 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
 
 ### 1.1 Clean Contamination [kraken2]
 ```sh
+#!/bin/bash
+#SBATCH --job-name kraken2
+#SBATCH --output kraken2_output
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 20
+#SBATCH --mem 64gb
+#SBATCH --time 20:00:00
+#SBATCH --mail-type ALL
+#SBATCH --mail-user tecorn@clemson.edu
 
+module load kraken2
+
+cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/
+
+## download databases
+# can take 14+ hours
+#kraken2-build --use-ftp --download-taxonomy --db db
+#kraken2-build --use-ftp --download-library bacteria --db db
+#kraken2-build --use-ftp --download-library UniVec_Core --db db
+
+# add relevant closely related genome
+kraken2-build --add-to-library /project/viper/venom/Taryn/Plestiodon/Pfasciatus/00_raw_ncbi_dataset/ --db db
+
+## build complete database
+kraken2-build --build --db db --threads 20
+
+## run kraken2
+kraken2 --threads 16 CLP1831_Hifi_Reads.fastq --db db --report reports/CLP1831.hifi.kraken.report.txt --output output/CLP1831.hifi.kraken.output.txt
+
+## extract relevant matches
+extract_kraken_reads.py -s CLP1831_Hifi_Reads.fastq -k output/CLP1831.hifi.kraken.output.txt --report reports/CLP1831.hifi.kraken.report.txt -t 32561 -o cleaned_reads/CLP1831_cleaned_hifi.fastq --include-children
+
+# -t 32561 = keeping all Sauria reads
 ```
 
 ## 02. Assembly [hifiasm]
