@@ -1,10 +1,8 @@
-# scripts from John Henry
+### tidk
 
+```sh
+source activate tidk
 tidk build
-
-tidk search -s TTAGGG --dir output/ --output Pegre-CLP3001_assembled_blood_tidk ../Pegre-CLP3001_assembled_blood.fa 
-
-tidk plot --tsv Pegre-CLP3001_assembled_blood_tidk_telomeric_repeat_windows.tsv
-
-# weird peaks were generated on plot using TTAGGG
-# use complete pipeline 
+idk search -s TTAGGG --dir output/ --output hifi_hic_scaffold ../04_YaHs/Pegre-CLP3001_hifi_hic_scaffold_genome.fasta
+tidk plot --tsv hifi_hic_scaffold_telomeric_repeat_windows.tsv 
+```
