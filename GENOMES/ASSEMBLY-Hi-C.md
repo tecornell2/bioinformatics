@@ -22,9 +22,9 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
 #SBATCH --output kraken2_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 20
-#SBATCH --mem 64gb
-#SBATCH --time 20:00:00
+#SBATCH --cpus-per-task 15
+#SBATCH --mem 100gb
+#SBATCH --time 10:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
@@ -42,13 +42,22 @@ cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/
 kraken2-build --add-to-library /project/viper/venom/Taryn/Plestiodon/Pfasciatus/00_raw/ncbi_dataset/rPleFas1.1.fa --db db
 
 ## build complete database
-kraken2-build --build --db db --threads 20
+kraken2-build --build --db db --threads 15
 
 ## run kraken2
-kraken2 --threads 16 CLP1831_Hifi_Reads.fastq --db db --report reports/CLP1831.hifi.kraken.report.txt --output output/CLP1831.hifi.kraken.output.txt
+kraken2 --threads 15 Pegre-CLP3001_WGS_blood_hifi.fastq.gz --db db --report reports/Pegre-CLP3001.hifi.kraken.report.txt --output output/Pegre-CLP3001.hifi.kraken.output.txt
 
 ## extract relevant matches
-extract_kraken_reads.py -s CLP1831_Hifi_Reads.fastq -k output/CLP1831.hifi.kraken.output.txt --report reports/CLP1831.hifi.kraken.report.txt -t 32561 -o cleaned_reads/CLP1831_cleaned_hifi.fastq --include-children
+module load anaconda3
+source activate kraken2
+
+extract_kraken_reads.py
+  -s /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/WGS/Blood/2026_03_27_UDel_PacBio_HiFi/00_raw/Pegre-CLP3001_WGS_blood_hifi.fastq.gz \
+  -k ../output/Pegre-CLP3001.hifi.kraken.output.txt \
+  --report ../reports/Pegre-CLP3001.hifi.kraken.report.txt \
+  -t 32561 \
+  -o Pegre-CLP3001_cleaned_hifi.fastq \
+  --include-children
 
 # -t 32561 = keeping all Sauria reads
 ```
