@@ -39,7 +39,7 @@ cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/
 #kraken2-build --use-ftp --download-library UniVec_Core --db db
 
 # add relevant closely related genome
-kraken2-build --add-to-library /project/viper/venom/Taryn/Plestiodon/Pfasciatus/00_raw_ncbi_dataset/ --db db
+kraken2-build --add-to-library /project/viper/venom/Taryn/Plestiodon/Pfasciatus/00_raw/ncbi_dataset/rPleFas1.1.fa --db db
 
 ## build complete database
 kraken2-build --build --db db --threads 20
