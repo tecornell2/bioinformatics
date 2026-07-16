@@ -378,66 +378,87 @@ If you are combining data from multiple runs, you can concatenate the reads into
 ## SLURM script
 
 #!/bin/bash
-#SBATCH --job-name genome_assembly_hifi_hic
-#SBATCH --output genome_assembly_hifi_hic_output
+#SBATCH --job-name Pegre_assembly_hifi_hic
+#SBATCH --output Pegre_assembly_hifi_hic_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 40
-#SBATCH --mem 256gb
-#SBATCH --time 24:00:00
+#SBATCH --cpus-per-task 50
+#SBATCH --mem 164gb
+#SBATCH --time 32:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
   module load anaconda3/2023.09-0
 
   ###### VARIABLES
-  THREADS=32
-  WORK_DIR="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii"
-  R1="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP2810_S4_R1_001.fastq.gz"
-  R2="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/00_raw/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP2810_S4_R2_001.fastq.gz"
-  HIFI="/project/viper/venom/Taryn/Nerodia/genomes/Nclarkii/01_concat/Nclar-CLP2810_WGS_blood_hifi_v2.fastq.gz"
-  OUTPUT="Nclar-CLP2810_blood_hifi_hic"
+  THREADS=50
+  WORK_DIR="/project/viper/venom/Taryn/Plestiodon/Pegregius/genome"
+  R1="${WORK_DIR}/00_raw/Pegre-CLP3001/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP3001_S7_R1_001_val_1.fq.gz"
+  R2="${WORK_DIR}/00_raw/Pegre-CLP3001/HiC/Muscle/2026_06_24_CUGBF_Illumina_HiC/01_trim_galore/CLP3001_S7_R2_001_val_2.fq.gz"
+  HIFI="${WORK_DIR}/00_raw/Pegre-CLP3001/WGS/Blood/2026_03_27_UDel_PacBio_HiFi/00_raw/Pegre-CLP3001_WGS_blood_hifi.fastq.gz"
+  OUTPUT="Pegre-CLP3001"
+
+  ###### KRAKEN2
+  source activate kraken2
+
+  #cd $WORK_DIR
+  #mkdir 01_kraken2
+  #cd 01_kraken2
+  #echo "Searching for contamination with kraken2..."
+    # assumed kraken2-build was already run
+  kraken2 \
+		--threads 20 \
+		/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/WGS/Blood/2026_03_27_UDel_PacBio_HiFi/00_raw/Pegre-CLP3001_WGS_blood_hifi.fastq.gz \
+		--db db \
+		--report reports/Pegre-CLP3001.hifi.kraken.report.txt \
+		--output output/Pegre-CLP3001.hifi.kraken.output.txt
 
   ###### HIFIASM
   source activate hifiasm
 
   cd $WORK_DIR
-  mkdir 01_hifiasm
-  cd 01_hifiasm
-
+  mkdir 02_hifiasm
+  cd 02_hifiasm
   echo "Assembling draft genome with hifiasm..."
   hifiasm -o $OUTPUT -t $THREADS --h1 $R1 --h2 $R2 $HIFI
-  awk '/^S/{print ">"$2;print $3}' ${OUTPUT}.bp.p_ctg.gfa > ${OUTPUT}.bp.p_ctg.fasta
-  bbstats.sh in=${OUTPUT}.bp.p_ctg.fasta out=${OUTPUT}.bp.p_ctg.fasta.stats.txt Xmx64g
+  awk '/^S/{print ">"$2;print $3}' ${OUTPUT}.hic.p_ctg.gfa > ${OUTPUT}.hic.p_ctg.fasta
   conda deactivate
 
-  ### ### BUSCO
-  source activate busco
+  #source activate bbmap
+  #echo "Calculating assembly statistics..."
+  #bbstats.sh in=${OUTPUT}.hic.p_ctg.fasta out=${OUTPUT}.hic.p_ctg.fasta.stats.txt Xmx64g
+  #conda deactivate
 
-  cd $WORK_DIR
-  mkdir 02_BUSCO
-  cd 02_BUSCO
+  ####### BUSCO
+  #source activate busco
 
-  echo "Running BUSCO..."
-  busco -i ../01_hifiasm/${OUTPUT}.bp.p_ctg.fasta -m genome -l /home/tecorn/busco_downloads/lineages/tetrapoda_odb12 -c $THREADS
-  source deactivate
+  #cd $WORK_DIR
+  #mkdir 02_BUSCO
+  #cd 02_BUSCO
+
+  # Pegre-CLP3001_blood_hifi.hic.p_ctg.fasta
+
+  #echo "Running BUSCO..."
+  #busco -i ../01_hifiasm/${OUTPUT}.hic.p_ctg.fasta -m genome -l /home/tecorn/busco/lineages/tetrapoda_odb12/ -c $THREADS -o output
+  #conda deactivate
 
   ###### BWA MEM
   module load bwa
   module load samtools
 
   cd $WORK_DIR
-  mkdir 03_BWA-MEM
+  #mkdir 03_BWA-MEM
   cd 03_BWA-MEM
 
-  cp ../01_hifiasm/${OUTPUT}.bp.p_ctg.fasta .
-  bwa index ${OUTPUT}.bp.p_ctg.fasta
-  samtools faidx ${OUTPUT}.bp.p_ctg.fasta
+  #cp ../01_hifiasm/${OUTPUT}.hic.p_ctg.fasta .
+  #bwa index ${OUTPUT}.hic.p_ctg.fasta
+  #samtools faidx ${OUTPUT}.hic.p_ctg.fasta
 
   echo "Aligning HiC reads to BWA-MEM..."
-  bwa mem -t $THREADS ../01_hifiasm/${OUTPUT}.bp.p_ctg.fasta $R1 $R2 | \
-      samtools sort -@ $THREADS -o ${OUTPUT}_sorted.bam
-  samtools index ${OUTPUT}_sorted.bam
+  bwa mem -t $THREADS ${OUTPUT}.hic.p_ctg.fasta $R1 $R2 | \
+      samtools sort -@ $THREADS -o ${OUTPUT}_aligned_sorted.bam
+
+  samtools index ${OUTPUT}_aligned_sorted.bam
 
   ###### YAHS
   source activate yahs
@@ -447,5 +468,6 @@ If you are combining data from multiple runs, you can concatenate the reads into
   cd 04_YaHs
 
   echo "Scaffolding with YaHs..."
-  yahs ../03_BWA-MEM/${OUTPUT}.bp.p_ctg.fasta ../03_BWA-MEM/${OUTPUT}_sorted.bam
+  yahs ../03_BWA-MEM/${OUTPUT}.hic.p_ctg.fasta ../03_BWA-MEM/${OUTPUT}_aligned_sorted.bam
+  conda deactivate
 ```
