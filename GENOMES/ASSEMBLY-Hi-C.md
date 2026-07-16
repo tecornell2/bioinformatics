@@ -22,42 +22,37 @@ Documentation: https://github.com/FelixKrueger/TrimGalore
 #SBATCH --output kraken2_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 15
-#SBATCH --mem 100gb
-#SBATCH --time 10:00:00
+#SBATCH --cpus-per-task 20
+#SBATCH --mem 120gb
+#SBATCH --time 12:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
 module load kraken2
 
-cd /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/Kraken
 
-## download databases
-# can take 14+ hours
-#kraken2-build --use-ftp --download-taxonomy --db db
-#kraken2-build --use-ftp --download-library bacteria --db db
-#kraken2-build --use-ftp --download-library UniVec_Core --db db
+echo "Adding additional genome..."
+kraken2-build --add-to-library /project/viper/venom/Taryn/Plestiodon/Pfasciatus/01_edited/rPleFas1.1.taxid.fa --db db
 
-# add relevant closely related genome
-kraken2-build --add-to-library /project/viper/venom/Taryn/Plestiodon/Pfasciatus/00_raw/ncbi_dataset/rPleFas1.1.fa --db db
+# force rebuild
+# without this kraken uses the hash table that does not include the new added taxa
+echo "Removing cached build files to force full rebuild..."
+rm -f "./db/hash.k2d"
+rm -f "./db/seqid2taxid.map"
 
-## build complete database
-kraken2-build --build --db db --threads 15
+echo "Building database..."
+kraken2-build --build --db db --no-masking --threads 20
 
-## run kraken2
-kraken2 --threads 15 Pegre-CLP3001_WGS_blood_hifi.fastq.gz --db db --report reports/Pegre-CLP3001.hifi.kraken.report.txt --output output/Pegre-CLP3001.hifi.kraken.output.txt
+echo "Running kraken2..."
+kraken2 \
+	--threads 20 \
+	/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/WGS/Blood/2026_03_27_UDel_PacBio_HiFi/00_raw/Pegre-CLP3001_WGS_blood_hifi.fastq.gz \
+	--db db \
+	--report reports/Pegre-CLP3001.hifi.kraken.report.txt \
+	--output output/Pegre-CLP3001.hifi.kraken.output.txt
 
-## extract relevant matches
-module load anaconda3
-source activate kraken2
-
-extract_kraken_reads.py
-  -s /project/viper/venom/Taryn/Plestiodon/Pegregius/genome/00_raw/Pegre-CLP3001/WGS/Blood/2026_03_27_UDel_PacBio_HiFi/00_raw/Pegre-CLP3001_WGS_blood_hifi.fastq.gz \
-  -k ../output/Pegre-CLP3001.hifi.kraken.output.txt \
-  --report ../reports/Pegre-CLP3001.hifi.kraken.report.txt \
-  -t 32561 \
-  -o Pegre-CLP3001_cleaned_hifi.fastq \
-  --include-children
+echo "Complete"
 
 # -t 32561 = keeping all Sauria reads
 ```
