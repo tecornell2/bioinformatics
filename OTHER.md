@@ -1,13 +1,6 @@
-## List of Other Packages
+## OTHER
 
-Name | Type | Use
---- | --- | ---
-SRA Tool Kit | import | Access NCBI SRA data
-MiniMap2 | gene mapping | Align reference genomes
-liftoff | gene mapping | Move gene annotations from reference to query genome
-GNUparallel | parallel jobs | note
-name | type | note
-name | type | note
+Other package snippets
 
 ---
 #### SRA tools loop for .fastq data
@@ -123,4 +116,33 @@ for dir in */; do
 		echo "No BAM file found"
 	fi
 done
+```
+
+#### juicer
+```sh
+#!/bin/bash
+#SBATCH --job-name=juicer_scut_pre
+#SBATCH --output=juicerscut_pre_sort.out
+#SBATCH --nodes 1
+#SBATCH --ntasks-per-node 1
+#SBATCH --cpus-per-task 24
+#SBATCH --mem 120gb
+#SBATCH --time 72:00:00
+#SBATCH --mail-type ALL
+
+module load anaconda3/2023.09-0
+source activate yahs_env
+
+# Go to working directory
+cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/08_Contact_Map
+
+# Run juicer pre and pipe into sort
+juicer pre Scutulatus_hic_algn_sorted.bam \
+    yahs.out_scaffolds_final.agp \
+    1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta.fai | \
+sort -k2,2d -k6,6d -T ./ --parallel=24 -S120G | \
+awk 'NF' > hic-to-contigs.txt
+
+java -Xmx32G -jar juicer_tools_1.22.01.jar pre hic-to-contigs.txt output.contact.map scaffolds_final.chrom.sizes
+
 ```
