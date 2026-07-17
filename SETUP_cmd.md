@@ -104,4 +104,11 @@ conda create -n edta mamba
 conda activate edta
 mamba install -c conda-forge -c bioconda edta
 ``
+---
+## Apptainer
+```sh
+apptainer pull funannotate_latest.sif docker://nextgenusfs/funannotate:latest
 
+# linked to my apptainer environment all the tools in bin:
+apptainer exec --bind /project/viper/venom/John_Henry/bin:/opt/tools funannotate_latest.sif bash
+```
