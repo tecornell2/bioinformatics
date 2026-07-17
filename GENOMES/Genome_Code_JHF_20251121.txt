@@ -445,28 +445,6 @@ $FUNANNOTATE_DB:/funannotate_db \
 
 
 ========> EGGNOG MAPPER
-conda create -n eggnog_env bioconda -c eggnog-mapper
-
-download this database inside eggnog_mapper in the bin
-python download_eggnog_data.py -d data
-
-#!/bin/bash
-#SBATCH --job-name EggNOG
-#SBATCH --output EggNOG_output
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 100gb
-#SBATCH --time 48:00:00
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=johnhen@clemson.edu
-
-module load anaconda3/2023.09-0
-source activate eggnog_env
-
-cd /project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output/predict_results
-
-python /project/viper/venom/John_Henry/bin/eggnog-mapper/emapper.py -i Geoemyda_japonica.proteins.fa -o emapper --cpu 24
 
 =========>SignalP is Insane
 #!/bin/bash
