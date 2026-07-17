@@ -1,73 +1,7 @@
-Overall, my pipeline goes as follows:
-Get raw reads from PacBio convert them to Fastq files and run nanoplot
-After nanoplot run bbstats and see if the files look good and ready for Hifiasm
-Run Hifiasm to assemble the genome
-After Hifiasm assess quality of genome with BUSCO
-After BUSCO it is time to add the HiC data
-Download raw reads and assess quality with fastqc
-After fastqc use fastp or Trim Galore to trim the Hi-C reads (I used Trim Galore)
-After take the trimmed reads and use bwa and samtools to index them to your genome
-Then use YaHs to scaffold genome using HiC data
 
-
-
-
-
-
-awk '/^S/{print ">"$2;print $3}' Clepi-CLP2201_WGS_blood.bp.p_ctg.gfa > Clepi-CLP2201_WGS_blood.p_ctg.fasta
-
-awk '/^S/{print ">"$2;print $3}' CLP1832_assembled_blood.bp.p_ctg.gfa > CLP1832_assembled_blood.bp.p_ctg.fasta
-
-CLP1832_assembled_blood.bp.p_utg.gfa
-CLP1832_assembled_blood.bp.p_ctg.gfa
-
-awk '/^S/{print ">"$2;print $3}' CLP2111_assembled_blood.bp.p_ctg.gfa > CLP2111_assembled_blood.bp.p_ctg.fasta
-
-
-bbstats.sh -in=CLP1832_assembled_blood.bp.p_ctg.fasta &> CLP1832_assembled_blood.bp.p_ctg.fasta.stats.txt
-
-bbstats.sh -in=CLP2111_assembled_blood.bp.p_ctg.fasta &> CLP2111_assembled_blood.bp.p_ctg.fasta.stats.txt
-#RHETT USED AN ALIAS IT SHOULD BE bbstats.sh
-
-
-
-BUSCO
-tar -xzf tetrapoda_odb12.2025-04-11.tar
-busco -i CLP1832_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/02_Busco
-
-
-#!/bin/bash
-
-#SBATCH --job-name BUSCO2111
-#SBATCH --output BUSCO2111_output
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 50
-#SBATCH --mem 240gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-
-module load anaconda3/2023.09-0
-source activate genome_env
-
-cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_2111_Genome/01_Data
-busco -i CLP2111_assembled_blood.bp.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o 02_Busco
-
-
-Now I am getting ready to add Hi-C data to my assembled genome
-First create a new anaconda environment other than (genome_env)
-
-conda create -n yahs_env -c bioconda
-
-conda install -c bioconda yahs
-conda install -c bioconda bwa
-conda install -c bioconda samtools
 
   Creating Contact Map:
   conda install -c bioconda bedtools
-
 
 
 This worked to create the .bed file
@@ -1426,69 +1360,6 @@ column -t -s $'\t' flagged_contaminant_scaffolds.tsv | less -S
 FOR THE TURTLE: SCAFFOLD 91 is the complete mitochondrial genome
 
 
-Now check the telomeric regions
-addded tidk to yahs_env
-tidk search -s TTAGGG \
-  --dir tidk_out \
-  --output Scutulatus_1832_trimmed \
-  --extension bedgraph \
-  yahs.out_trimmed_scaffolds_final.fa
-
-
-but did not create the .tsv file i need so I ran:
-tidk search -s TTAGGG \
-  --dir tidk_out \
-  --output Scutulatus_1832_trimmed \
-  yahs.out_trimmed_scaffolds_final.fa
-
-
-This worked now i need to run another thing to generate the graph:
-tidk plot \
-  --tsv tidk_out/Scutulatus_1832_trimmed_telomeric_repeat_windows.tsv \
-  --output tidk_out/Scutulatus_1832_telomere_plot
-
-
-
-Now for the turtle for telomere plot
-tidk search -s TTAGGG \
-  --dir tidk_out \
-  --output Turtle_trimmed \
-  yahs.out_scaffolds_final.fa
-
-
-This worked now i need to run another thing to generate the graph:
-tidk plot \
-  --tsv tidk_out/Turtle_trimmed_telomeric_repeat_windows.tsv \
-  --output tidk_out/Turtle_telomere_plot
-
-
-
-  Ok trying ragtag with the adamanteus
-
-
-
 Pull out a chromosome:
 samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_like.fa
 samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
-
-
-
-
-
-
-
-
-FUNANNOTATE SCUTULAUTUS
-RepeatMasker -pa 24 -e ncbi -lib Scutulatus_Genome.fa.mod.EDTA.TElib.fa \
-    -dir ./EDTA_out \
-    -gff -xsmall Scutulatus_Genome.fa
-
-
-    Now confirm that the genome is softmasked:
-    
-    awk 'BEGIN{uc=lc=0} /^>/ {next} {
-    for(i=1;i<=length($0);i++){
-        c=substr($0,i,1); if(c~/[A-Z]/) uc++; else if(c~/[a-z]/) lc++;
-    }
-} END{printf "upper: %d\nlower: %d\npct_masked: %.2f\n", uc, lc, lc/(uc+lc)*100}' Scutulatus_Genome.fa.masked
-
