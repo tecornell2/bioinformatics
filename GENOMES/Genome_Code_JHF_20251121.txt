@@ -1,4 +1,5 @@
 
+#########################################################################################
 
 # use python script to see stats for repeat elements (summarize_EDTA.py)
 
@@ -54,22 +55,11 @@ print(f"\nSaved summary to {out_file}")
 
 #########################################################################################
 
-
-####### Running BUSCO on proteins
-
-    busco -i CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o 02_Busco
-
-    busco -i Geoemyda_japonica.proteins.fa -l /home/johnhen/Databases/tetrapoda_odb12 -m protein -c 24 -o busco_annotation_check
-
-
-
 ####### ESTIMATE COVERAGE
 
 
 	samtools depth  hic_aln.sorted.bam | awk '{sum+=$3} END {print sum/NR}' >  hic_aln.sorted.bam_depth.txt
 	samtools stats  hic_aln.sorted.bam >  hic_aln.sorted.bam_alignmentstats.txt'
-
-
 
 ####### STRUCTURAL VARIANTS
 
