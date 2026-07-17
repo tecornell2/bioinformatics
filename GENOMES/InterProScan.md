@@ -1,3 +1,4 @@
+```sh
 #!/bin/bash
 #SBATCH --job-name=07_InterProScan_Nfasc
 #SBATCH --output=07_InterProScan_Nfasc_output
@@ -27,3 +28,7 @@ $INTERPROSCAN \
   -appl Pfam,SMART,TIGRFAM,CDD \
   -iprlookup \
   -goterms \
+```
+
+```sh
+```
