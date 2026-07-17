@@ -68,103 +68,7 @@ perl /home/johnhen/.conda/envs/edta_env/share/EDTA/bin/make_masked.pl \
  Renamed output file:
  mv turtle_genome.fa.new.masked turtle_genome.softmasked.fa
 
- Now time to get an LAI score
-
-#!/bin/bash
-#SBATCH --job-name=LAI_turtle
-#SBATCH --output=LAI_turtle.out
-#SBATCH --error=LAI_turtle.err
-#SBATCH --time=48:00:00
-#SBATCH --cpus-per-task=20
-#SBATCH --mem=120G
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=johnhen@clemson.edu
-
-# Load your conda env with LTR_retriever installed
-module load anaconda3/2023.09-0
-source activate edta_env
-
-cd /project/viper/venom/John_Henry/Turtle/EDTA_out
-# Run LAI
-LAI -genome /project/viper/venom/John_Henry/Turtle/turtle_genome.fa \
-    -intact /project/viper/venom/John_Henry/Turtle/EDTA_out/turtle_genome.fa.mod.EDTA.intact.fa \
-    -bed /project/viper/venom/John_Henry/Turtle/EDTA_ou/turtle_genome.fa.mod.EDTA.intact.gff3 \
-    -output turtle_LAI \
-    -threads 20
-
-
-
-
-LAI -genome /project/viper/venom/John_Henry/Turtle/turtle_genome.fa -intact turtle_genome.fa.mod.EDTA.raw/LTR/turtle_genome.fa.mod.pass.list -all /turtle_genome.fa.mod.EDTA.combine/turtle_genome.fa.mod.LTR.raw.fa.preFriAug10925522025.RMoutput/turtle_genome.fa.mod.LTR.raw.fa.out -t 80
-
-
-
-Continuing with the TURTLE:
-Trying to run funannotate with Apptainer
-apptainer pull funannotate_latest.sif docker://nextgenusfs/funannotate:latest
-
-Ok that worked, then I linked to my apptainer environment all the tools in my bin:
-apptainer exec --bind /project/viper/venom/John_Henry/bin:/opt/tools funannotate_latest.sif bash
-
 Trying to run Funannotate train using an Apptainer
-
-
-#!/bin/bash
-
-#SBATCH --job-name FunannotateStep1
-#SBATCH --output FunannotateStep1_output
-#SBATCH --nodes 1
-#SBATCH --partition nodeviper
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 270gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-
-apptainer exec \
-    --bind /project/viper/venom/John_Henry/bin:/opt/tools,/project/viper/venom/John_Henry/Turtle/03_Funannotate:/data \
-    /project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_latest.sif \
-    funannotate train \
-        -i /data/turtle_genome.softmasked.fa \
-        -o /data/funannotate_train_output \
-        --left /data/Gjapo-CLP2966_RNA_Blood_R1_trim.fastq.gz \
-        --right /data/Gjapo-CLP2966_RNA_Blood_R2_trim.fastq.gz \
-        --max_intronlen 10000 \
-        --cpus 24
-
-
-
-        
-#!/bin/bash
-
-#SBATCH --job-name FunannotateStep2
-#SBATCH --output FunannotateStep2_output
-#SBATCH --nodes 1
-#SBATCH --partition nodeviper
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 300gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-
-apptainer exec \
-    --bind /project/viper/venom/John_Henry/bin:/opt/tools,/project/viper/venom/John_Henry/Turtle/03_Funannotate:/data \
-    /project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_latest.sif \
-    funannotate predict \
-        -i /data/turtle_genome.softmasked.fa \
-        -o /data/funannotate_predict_output \
-        --species "Geoemyda japonica" \
-        --rna_bam /data/funannotate_train_output/training/funannotate_train.coordSorted.bam \
-        --transcript_evidence /data/funannotate_train_output/training/funannotate_train.pasa.gff3 \
-        --cpus 24
-
-
-
-
 
 
 Alright trying to download InterProScan:
@@ -211,8 +115,6 @@ $FUNANNOTATE_DB:/funannotate_db \
     --cpus 24
 
 
-========> EGGNOG MAPPER
-
 =========>SignalP is Insane
 #!/bin/bash
 #SBATCH --job-name=SignalP
@@ -238,8 +140,6 @@ cd /project/viper/venom/John_Henry/bin/signalp/signalp5/bin || { echo "cd failed
   -org euk \
   -format short \
   -prefix $OUTDIR/$PREFIX
-
-
 
 
 
