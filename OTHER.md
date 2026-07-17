@@ -120,6 +120,8 @@ done
 
 #### juicer
 ```sh
+ wget https://s3.amazonaws.com/hicfiles.tc4ga.com/public/juicer/juicer_tools_1.22.01.jar
+
 #!/bin/bash
 #SBATCH --job-name=juicer_scut_pre
 #SBATCH --output=juicerscut_pre_sort.out
