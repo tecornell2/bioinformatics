@@ -11,6 +11,8 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=tecorn@clemson.edu
 
+# wget https://ftp.ebi.ac.uk/pub/software/unix/iprscan/5/5.75-106.0/interproscan-5.75-106.0-64-bit.tar.gz
+
 # load java
 module load java/11.0.2
 
