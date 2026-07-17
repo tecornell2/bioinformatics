@@ -296,18 +296,31 @@ emapper.py \
 ## .job file
 ```sh
 #!/bin/bash
-#SBATCH --job-name 07_SignalP
-#SBATCH --output 07_SignalP_Nfasc_output
+#SBATCH --job-name SignalP
+#SBATCH --output SignalP_output
 #SBATCH --nodes 1
 #SBATCH --partition nodeviper
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 24
 #SBATCH --mem 100gb
-#SBATCH --time 72:00:00
+#SBATCH --time 48:00:00
 #SBATCH --mail-type ALL
 #SBATCH --mail-user tecorn@clemson.edu
 
-signalp 
+INPUT=genome.proteins.fa
+OUTDIR=output
+PREFIX=Plestiodon_egregius
+
+mkdir -p $OUTDIR
+cd ~/signalp/signalp5/bin || { echo "cd failed"; exit 1; }
+
+# Run SignalP
+./signalp \
+  -fasta $INPUT \
+  -org euk \
+  -format short \
+  -prefix $OUTDIR/$PREFIX
+
 ```
 
 ## BUSCO
