@@ -31,4 +31,38 @@ $INTERPROSCAN \
 ```
 
 ```sh
+
+Run EggNog, SignalP, and InterProScan separately
+====> InterProScan
+#!/bin/bash
+#SBATCH --job-name=InterProScan
+#SBATCH --output=InterProScan_output
+#SBATCH --error=InterProScan_error
+#SBATCH --nodes=1
+#SBATCH --partition=nodeviper
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=370gb
+#SBATCH --time=120:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=johnhen@clemson.edu
+
+# Load Java (required by InterProScan)
+module load java/11.0.2
+
+INTERPROSCAN=/home/johnhen/Databases/funannotate_databases/interproscan-5.75-106.0/interproscan.sh
+INPUT=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output/predict_results/Geoemyda_japonica.proteins.fa
+OUTDIR=/project/viper/venom/John_Henry/Turtle/03_Funannotate/interproscan_output
+
+mkdir -p $OUTDIR
+
+$INTERPROSCAN \
+  -i $INPUT \
+  -f XML,GFF3,TSV \
+  -dp \
+  -cpu 24 \
+  -appl Pfam,SMART,TIGRFAM,CDD \
+  -iprlookup \
+  -goterms \
+
 ```
