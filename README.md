@@ -11,8 +11,6 @@ bioinformatics
 │		├── ASSEMBLY-Hi-C
 │		├── ASSEMBLY-HiFi
 │		├── ANNOTATION-BRAKER
-│		├── ANNOTATION-GALBA
-│		├── InterProScan
 │		├── ManualCorrections
 │		├── PretextMap_PretextView
 │		├── RagTag
