@@ -1,8 +1,5 @@
+## GNU parallel
 ```sh
-####################################################
-################## GNU PARALLEL ####################
-####################################################
-
 #!/bin/bash
 #SBATCH --job-name Nero_trim_reads
 #SBATCH --output Nero_trim_reads_output
@@ -30,6 +27,8 @@ parallel -a 00_samples_list.txt -j 30 -k --colsep '\t' 'echo {1} started
 
 echo {1} finished ' 
 ```
+
+## GNU parallel
 ```sh
 #################
 salloc --nodes=1 --ntasks=1 --cpus-per-task=20 --mem=40G --time=2:00:00
@@ -37,11 +36,9 @@ salloc --nodes=1 --ntasks=1 --cpus-per-task=20 --mem=40G --time=2:00:00
 
 parallel -j 20 --progress fastqc -q -o fastqc/ {} ::: *.fastq.gz
 ```
-```sh
-####################################################
-################## RENAME FILES ####################
-####################################################
 
+## rename fasta files bulk
+```sh
 #!/bin/bash
 #SBATCH --job-name rename_run816
 #SBATCH --output rename_run816_output
@@ -81,6 +78,7 @@ while IFS=$'\t' read -r combined_barcode sampleID; do
 done < "$BARCODE_FILE"
 ```
 
+## pull contigs/scaffolds out of genome
 ```sh
 
 Pull out a chromosome:
