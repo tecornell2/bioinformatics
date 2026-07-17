@@ -152,41 +152,6 @@ samtools index $SORTED_BAM
 
 
 
-Trying to get juicer
- wget https://s3.amazonaws.com/hicfiles.tc4ga.com/public/juicer/juicer_tools_1.22.01.jar
-
-
-
-#!/bin/bash
-#SBATCH --job-name=juicer_pre
-#SBATCH --output=juicer_pre_sort.out
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 120gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-module load anaconda3/2023.09-0
-source activate yahs_env
-
-# Go to working directory
-cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome/04_Contact_Map
-
-# Run juicer pre and pipe into sort
-juicer pre blood_hic_algn_sorted.bam \
-    yahs.out_scaffolds_final.agp \
-    CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta.fai | \
-sort -k2,2d -k6,6d -T ./ --parallel=24 -S120G | \
-awk 'NF' > hic-to-contigs.txt
-
-This creates the .txt file with the HiC associations
-
-Now Actually run juicer
- java -Xmx32G -jar juicer_tools_1.22.01.jar pre hic-to-contigs.txt output.contact.map scaffolds_final.chrom.sizes
-
-
  Oh my grief it worked
  Use globus to move to your computer and then use https://aidenlab.org/juicebox/
 
