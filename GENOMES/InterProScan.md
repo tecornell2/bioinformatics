@@ -30,10 +30,9 @@ $INTERPROSCAN \
   -goterms \
 ```
 
-```sh
+script from Joh Hen:
 
-Run EggNog, SignalP, and InterProScan separately
-====> InterProScan
+```sh
 #!/bin/bash
 #SBATCH --job-name=InterProScan
 #SBATCH --output=InterProScan_output
@@ -44,8 +43,6 @@ Run EggNog, SignalP, and InterProScan separately
 #SBATCH --cpus-per-task=24
 #SBATCH --mem=370gb
 #SBATCH --time=120:00:00
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=johnhen@clemson.edu
 
 # Load Java (required by InterProScan)
 module load java/11.0.2
