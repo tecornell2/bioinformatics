@@ -1,6 +1,6 @@
 
 
-Then, used the following python script to see stats for repeat elements (summarize_EDTA.py)
+# use python script to see stats for repeat elements (summarize_EDTA.py)
 
 #!/usr/bin/env python3
 import pandas as pd
@@ -107,6 +107,8 @@ Then get the sizes file
 cut -f1,2 Scutulatus_Genome.fa.fai > scaffolds_final.chrom.sizes
 
 Ok now get the .txt file you need
+
+#######################################################
 
 
 ====================> BLAST small scaffolds
@@ -259,14 +261,9 @@ with open(input_file, "r") as infile, open(output_file, "w", newline="") as outf
 
 
 
-Looking for non-squamate with high bit score and 
+# Looking for non-squamate with high bit score and 
 
-
-can also grep for specific contaminants:
+# can also grep for specific contaminants:
 grep -i "Homo sapiens" small_scaffolds_blast_results.tsv
 column -t -s $'\t' flagged_contaminant_scaffolds.tsv | less -S
 
-
-Pull out a chromosome:
-samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_like.fa
-samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
