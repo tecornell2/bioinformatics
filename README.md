@@ -4,8 +4,8 @@
 bioinformatics
 │
 ├── CLIMATE
-│		├── 
-│		└── 
+│		├── BioClim
+│		└── chooseGCM
 │
 ├── GENOMES
 │		├── ASSEMBLY-Hi-C
@@ -22,7 +22,10 @@ bioinformatics
 │		    └── chr_plot_relative_size.py
 │
 ├── POP_GEN
-│		└── STACKS
+│		├── EEMS
+│		├── RADseq_qaqc
+│		├── easySFS
+│		└── sNMF
 │
 ├── SYNTENY
 │		├── asynt
