@@ -5,15 +5,14 @@ bioinformatics
 │
 ├── FIGURES
 │		├── RiparianPlot
-│		├── SnailPlot
-│		└── SyntenyPlot
+│		└── scripts
 │
 ├── GENOMES
 │		├── ASSEMBLY-Hi-C
 │		├── ASSEMBLY-HiFi
 │		├── ANNOTATION-BRAKER
-│		├── ANNOTATION-funannotate
 │		├── ANNOTATION-GALBA
+│		├── blobtools_SnailPlot
 │		├── ManualCorrections
 │		├── RagTag
 │		└── scripts
