@@ -1685,33 +1685,6 @@ cut -f1,2 Scutulatus_Genome.fa.fai > scaffolds_final.chrom.sizes
 
 Ok now get the .txt file you need
 
-#!/bin/bash
-#SBATCH --job-name=juicer_scut_pre
-#SBATCH --output=juicerscut_pre_sort.out
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 120gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-module load anaconda3/2023.09-0
-source activate yahs_env
-
-# Go to working directory
-cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/08_Contact_Map
-
-# Run juicer pre and pipe into sort
-juicer pre Scutulatus_hic_algn_sorted.bam \
-    yahs.out_scaffolds_final.agp \
-    1832_assembled_blood_DoubleHiC.hic.p_ctg.fasta.fai | \
-sort -k2,2d -k6,6d -T ./ --parallel=24 -S120G | \
-awk 'NF' > hic-to-contigs.txt
-
-
-java -Xmx32G -jar juicer_tools_1.22.01.jar pre hic-to-contigs.txt output.contact.map scaffolds_final.chrom.sizes
-
 
 ====================> BLAST small scaffolds
 
@@ -1913,141 +1886,9 @@ tidk plot \
 
   Ok trying ragtag with the adamanteus
 
-ragtag_env
 
 
-#!/bin/bash
-#SBATCH --job-name=ragtag_scut_adam
-#SBATCH --output=ragtag_scut_adam_output
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=120G
-#SBATCH --time=48:00:00
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=johnhen@clemson.edu
-
-module load anaconda3/2023.09-0
-source activate ragtag_env
-
-cd /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/09_Adam_Alignment
-
-ragtag.py scaffold \
-    GCA_039797435.1_Cadamanteus_3dDNAHiC_1.2_genomic.fna \
-    Scutulatus_Genome.fa \
-    -o ragtag_out \
-    -t 32
-
-Now making a chromosome map using python:
-#!/usr/bin/env python3
-# scaffold_chromosome_map_ragtag_fixed_save.py
-# Robust scaffold-to-chromosome map for RagTag output (saves plot to file)
-
-import pandas as pd
-import matplotlib.pyplot as plt
-
-# -----------------------------
-# INPUT FILES
-# -----------------------------
-ragtag_file = "ragtag_scaffold_summary.txt"  # tab-separated: ReferenceCM\tScaffold\tOrientation
-ref_map_file = "chromosome_map.txt"          # tab-separated: CMID\tChromosome
-
-# -----------------------------
-# LOAD AND CLEAN RAGTAG SUMMARY
-# -----------------------------
-ragtag = pd.read_csv(ragtag_file, sep="\t", header=None, names=["CM","Scaffold","Orientation"], dtype=str)
-
-# Drop blank/malformed rows
-ragtag = ragtag.dropna(subset=["CM","Scaffold","Orientation"])
-ragtag = ragtag[(ragtag["CM"].str.strip() != "") &
-                (ragtag["Scaffold"].str.strip() != "") &
-                (ragtag["Orientation"].str.strip() != "")]
-
-# Strip whitespace
-ragtag["CM"] = ragtag["CM"].str.strip()
-ragtag["Scaffold"] = ragtag["Scaffold"].str.strip()
-ragtag["Orientation"] = ragtag["Orientation"].str.strip()
-
-# Strip trailing _RagTag from CM IDs
-ragtag["CM"] = ragtag["CM"].str.replace(r"_RagTag$", "", regex=True)
-
-# -----------------------------
-# LOAD CHROMOSOME MAP
-# -----------------------------
-ref_map = pd.read_csv(ref_map_file, sep="\t", header=None, names=["CM","Chromosome"], dtype=str)
-ref_map = ref_map.dropna(subset=["CM","Chromosome"])
-ref_map["CM"] = ref_map["CM"].str.strip()
-ref_map["Chromosome"] = ref_map["Chromosome"].str.strip()
-
-# -----------------------------
-# MERGE
-# -----------------------------
-df = ragtag.merge(ref_map, on="CM", how="inner")
-
-# Warn if scaffolds didn't match
-missing_count = len(ragtag) - len(df)
-if missing_count > 0:
-    print(f"Warning: {missing_count} scaffolds in RagTag summary did not match chromosome map and were ignored.")
-
-# Check if there’s anything to plot
-if df.empty:
-    raise ValueError("No scaffolds to plot after merging. Check your input files.")
-
-# -----------------------------
-# SET SCAFFOLD LENGTH FOR PLOTTING
-# -----------------------------
-df["Length"] = 1  # default: equal width
-
-# -----------------------------
-# PLOT
-# -----------------------------
-chromosomes = sorted(df["Chromosome"].unique(), key=lambda x: (not x.isdigit(), x))
-
-fig_height = max(2, len(chromosomes)*0.6)
-fig, ax = plt.subplots(figsize=(15, fig_height))
-
-yticks = []
-ytlabels = []
-
-for i, chrom in enumerate(chromosomes):
-    chrom_scaffs = df[df["Chromosome"] == chrom]
-    start = 0
-    for _, row in chrom_scaffs.iterrows():
-        end = start + row["Length"]
-        color = "green" if row["Orientation"] == "+" else "red"
-        ax.barh(i, width=row["Length"], left=start, color=color, edgecolor="black")
-        ax.text(start + row["Length"]/2, i, row["Scaffold"], ha="center", va="center", fontsize=6)
-        start = end
-    yticks.append(i)
-    ytlabels.append(f"Chr {chrom}")
-
-ax.set_yticks(yticks)
-ax.set_yticklabels(ytlabels)
-ax.set_xlabel("Scaffolds (relative order)")
-ax.set_title("C. scutulatus scaffolds mapped to C. adamanteus chromosomes\nGreen=+ orientation, Red=- orientation")
-
-# Safe tight_layout
-try:
-    plt.tight_layout()
-except Exception as e:
-    print("Warning: tight_layout failed:", e)
-
-# -----------------------------
-# SAVE FIGURES
-# -----------------------------
-output_png = "scaffold_chromosome_map.png"
-output_pdf = "scaffold_chromosome_map.pdf"
-
-plt.savefig(output_png, dpi=300, bbox_inches="tight")
-plt.savefig(output_pdf, bbox_inches="tight")
-print(f"Plots saved to:\n - {output_png}\n - {output_pdf}")
-
-# Optional: show plot locally if running in GUI (not needed on HPC)
-# plt.show()
-
-
-
-TOXCODAN ON CHROMOSOME 9 and 16
+Pull out a chromosome:
 samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_like.fa
 samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
 
@@ -2072,26 +1913,3 @@ RepeatMasker -pa 24 -e ncbi -lib Scutulatus_Genome.fa.mod.EDTA.TElib.fa \
     }
 } END{printf "upper: %d\nlower: %d\npct_masked: %.2f\n", uc, lc, lc/(uc+lc)*100}' Scutulatus_Genome.fa.masked
 
-#!/bin/bash
-
-#SBATCH --job-name FunannotateTrain
-#SBATCH --output FunannotateTrain_output
-#SBATCH --nodes 1
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 350gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-
-apptainer exec \
-    --bind /project/viper/venom/John_Henry/bin:/opt/tools,/project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/10_Funannotate:/data \
-    /project/viper/venom/John_Henry/Scutulatus_Genomes/CLP_1832_Genome_Double/10_Funannotate/funannotate_latest.sif \
-    funannotate train \
-        -i /data/Scutulatus_Genome.fa.masked \
-        -o /data/funannotate_train_output \
-        --left /data/Cscut-CLP1832_RNA_VG_R1_trim.fastq.gz \
-        --right /data/Cscut-CLP1832_RNA_VG_R2_trim.fastq.gz \
-        --max_intronlen 30000 \
-        --cpus 24
