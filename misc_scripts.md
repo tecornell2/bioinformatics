@@ -1,3 +1,4 @@
+```sh
 ####################################################
 ################## GNU PARALLEL ####################
 ####################################################
@@ -28,13 +29,15 @@ parallel -a 00_samples_list.txt -j 30 -k --colsep '\t' 'echo {1} started
     done
 
 echo {1} finished ' 
-
+```
+```sh
 #################
 salloc --nodes=1 --ntasks=1 --cpus-per-task=20 --mem=40G --time=2:00:00
 # 20 cpus on one node with 2GB per cpu (job)
 
 parallel -j 20 --progress fastqc -q -o fastqc/ {} ::: *.fastq.gz
-
+```
+```sh
 ####################################################
 ################## RENAME FILES ####################
 ####################################################
@@ -76,3 +79,11 @@ while IFS=$'\t' read -r combined_barcode sampleID; do
     done
     
 done < "$BARCODE_FILE"
+```
+
+```sh
+
+Pull out a chromosome:
+samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_like.fa
+samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
+```
