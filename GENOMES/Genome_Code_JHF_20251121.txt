@@ -142,57 +142,6 @@ cd /project/viper/venom/John_Henry/bin/signalp/signalp5/bin || { echo "cd failed
   -prefix $OUTDIR/$PREFIX
 
 
-
-Ok combine all results into Annotation:
-#!/bin/bash
-#SBATCH --job-name FunannotateAnnotate
-#SBATCH --output FunannotateAnnotate_output
-#SBATCH --nodes 1
-#SBATCH --partition nodeviper
-#SBATCH --ntasks-per-node 1
-#SBATCH --cpus-per-task 24
-#SBATCH --mem 370gb
-#SBATCH --time 72:00:00
-#SBATCH --mail-type ALL
-#SBATCH --mail-user johnhen@clemson.edu
-
-module load java/11.0.2
-
-# Paths
-FUNANNOTATE_CONTAINER=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_latest.sif
-FUNANNOTATE_DB=/home/johnhen/Databases/funannotate_databases
-TOOLS=/project/viper/venom/John_Henry/bin
-PREDICT_OUTPUT=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output
-ANNOTATE_OUTPUT=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_annotate_output
-
-# External results
-EGGNOG=/project/viper/venom/John_Henry/Turtle/03_Funannotate/funannotate_predict_output/predict_results/emapper.emapper.annotations
-IPRSCAN=/project/viper/venom/John_Henry/Turtle/03_Funannotate/interproscan_output/Geoemyda_japonica_iprscan.tsv
-SIGNALP=/project/viper/venom/John_Henry/Turtle/03_Funannotate/signalp_output/Geoemyda_japonica_summary.signalp5
-
-# Make sure annotate output directory exists
-mkdir -p $ANNOTATE_OUTPUT
-
-# Run annotation
-apptainer exec \
-  --bind $TOOLS:/opt/tools,\
-$PREDICT_OUTPUT:/data/predictions,\
-$ANNOTATE_OUTPUT:/data/funannotate_annotate_output,\
-$FUNANNOTATE_DB:/funannotate_db \
-  --env FUNANNOTATE_DB=/funannotate_db \
-  $FUNANNOTATE_CONTAINER \
-  funannotate annotate \
-    -i /data/predictions \
-    -o /data/funannotate_annotate_output \
-    --species "Geoemyda japonica" \
-    --eggnog $EGGNOG \
-    --iprscan $IPRSCAN \
-    --signalp $SIGNALP \
-    --cpus 24
-
-
-
-
     Running BUSCO on proteins
 
     busco -i CLP1832_assembled_blood_plusHiC.hic.p_ctg.fasta  -m genome -l /home/johnhen/Databases/tetrapoda_odb12 -c 80 -o 02_Busco
