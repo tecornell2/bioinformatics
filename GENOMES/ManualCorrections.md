@@ -22,6 +22,13 @@ cut -f1,2 genome.fa.fai > scaffolds_final.chrom.sizes
 
 ## BLAST
 
+```sh
+# export removed reads from raw HiFi that were removed by kraken2
+comm -23 <(seqkit seq -n ../00_raw/Pegre-CLP3001/WGS/Blood/2026_03_27_UDel_PacBio_HiFi/Pegre-CLP3001_WGS_blood_hifi.fastq | sort) <(seqkit seq -n Pegre-CLP3001_cleaned_hifi.fastq | sort) > removed_reads.fa
+
+# BLAST removed_reads.fa to verify kraken removal
+```
+
 ## RagTag contigs and scaffolds
 1. RagTag contigs and scaffolds to closest reference genome relative available
 2. Identify contigs (from query genome) that associate with different chromosomes/locations compared to the scaffolded genome, relative to the reference genome
