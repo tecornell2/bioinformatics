@@ -148,5 +148,11 @@ awk 'NF' > hic-to-contigs.txt
 
 # run juicer
  java -Xmx32G -jar juicer_tools_1.22.01.jar pre hic-to-contigs.txt output.contact.map scaffolds_final.chrom.sizes
-
 ```
+
+
+#### seqkit
+```sh
+seqkit sum <fasta1> <fasta2>
+```
+
