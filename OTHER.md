@@ -163,3 +163,10 @@ samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_
 samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
 ```
 
+#### regex 
+```sh
+for i in $( ls *001.fastq.gz | perl -pe "s/_R(1|2).*//g" | uniq );
+do
+echo $i ;
+done`
+```
