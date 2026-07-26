@@ -78,10 +78,3 @@ while IFS=$'\t' read -r combined_barcode sampleID; do
 done < "$BARCODE_FILE"
 ```
 
-## pull contigs/scaffolds out of genome
-```sh
-
-Pull out a chromosome:
-samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_like.fa
-samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
-```
