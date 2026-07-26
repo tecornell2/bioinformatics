@@ -151,8 +151,15 @@ awk 'NF' > hic-to-contigs.txt
 ```
 
 
-#### seqkit
+#### seqkit comparison of two fastas
 ```sh
 seqkit sum <fasta1> <fasta2>
+```
+
+## samtools extract contigs/scaffolds
+```sh
+Pull out a chromosome:
+samtools faidx Scutulatus_Genome.fa scaffold_166 scaffold_84 > scutulatus_chr16_like.fa
+samtools faidx Scutulatus_Genome.fa scaffold_11 scaffold_120 > scutulatus_chr9_like.fa
 ```
 
