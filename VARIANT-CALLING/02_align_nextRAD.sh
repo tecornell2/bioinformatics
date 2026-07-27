@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name 01_nextRAD
-#SBATCH --output 01_assemble_nextRAD_output
+#SBATCH --job-name 02_align_nextRAD
+#SBATCH --output 02_align_nextRAD_output
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
 #SBATCH --cpus-per-task 40
