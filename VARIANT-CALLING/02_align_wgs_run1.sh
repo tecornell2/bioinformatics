@@ -22,8 +22,6 @@ export ref
 
 parallel -a 00_samples_list3.txt -j 2 -k --colsep '\t' 'echo {1} started
 
-    cd /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/
-
 	module load anaconda3/2023.09-0
 	source activate bio
 	module load bwa
