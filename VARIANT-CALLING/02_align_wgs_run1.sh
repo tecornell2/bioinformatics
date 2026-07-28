@@ -38,7 +38,7 @@ parallel -a 00_samples_list3.txt -j 2 -k --colsep '\t' 'echo {1} started
 
     if [ ! -s {1}_aligned_sorted_RG.bam ]; then
 		bwa mem -t 8 \
-			-R @RG\tID:{1}_1\tSM:{1}\tLB:{1}_1\tPL:ILLUMINA\tPU:{1}_1 \
+			-R $'@RG\tID:{1}_1\tSM:{1}\tLB:{1}_1\tPL:ILLUMINA\tPU:{1}_1' \
 			"$ref" "$trimmed_R1" "$trimmed_R2" 2> {1}_aligned.log | \
 			samtools sort -@ 4 -o {1}_aligned_sorted_RG.bam
     fi
