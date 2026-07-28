@@ -36,7 +36,7 @@ parallel -a 00_samples_list3.txt -j 2 -k --colsep '\t' 'echo {1} started
     trimmed_R1="$trim_dir/{1}_R1.trim.fq.gz"
     trimmed_R2="$trim_dir/{1}_R2.trim.fq.gz"
 
-    if [ ! -s {1}_aligned_sorted.bam ]; then
+    if [ ! -s {1}_aligned_sorted_RG.bam ]; then
 		bwa mem -t 8 \
 			-R @RG\tID:{1}_1\tSM:{1}\tLB:{1}_1\tPL:ILLUMINA\tPU:{1}_1 \
 			"$ref" "$trimmed_R1" "$trimmed_R2" 2> {1}_aligned.log | \
