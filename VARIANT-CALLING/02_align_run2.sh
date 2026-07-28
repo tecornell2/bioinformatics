@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name 01_trim_assemble_52-60
-#SBATCH --output 01_trim_assemble_52-60_output
+#SBATCH --job-name 02_align_52-60
+#SBATCH --output 02_align_output
 #SBATCH --partition nodeviper
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
@@ -29,44 +29,6 @@ parallel -a 00_samples_list3.txt -j 4 -k --colsep '\t' 'echo {1} started
 
 	mkdir -p ./01_trim_galore/{1}/fastqc/
 	mkdir -p ./00_raw/fastq/fastqc
-
-	######################################################
-	############ fastQC and trim reads run1 ##############
-	######################################################
-
-    trim_galore --paired -j 8 -o ./01_trim_galore/{1}/ \
-        00_raw/fastq/{1}_*_R1_001.fastq.gz \
-		00_raw/fastq/{1}_*_R2_001.fastq.gz
-
-    mv ./01_trim_galore/{1}/{1}*_val_1.fq.gz ./01_trim_galore/{1}/{1}_R1.run1.fq.gz
-    mv ./01_trim_galore/{1}/{1}*_val_2.fq.gz ./01_trim_galore/{1}/{1}_R2.run1.fq.gz
-
-
-	fastqc \
-        -o ./01_trim_galore/{1}/fastqc \
-        -m 1000 \
-		-t 6 \
-        ./01_trim_galore/{1}/{1}_R1.run1.fq.gz \
-        ./01_trim_galore/{1}/{1}_R2.run1.fq.gz
-
-	######################################################
-	############ fastQC and trim reads run2 ##############
-	######################################################
-
-    trim_galore --paired -j 8 -o ./01_trim_galore/{1}/ \
-        00_raw/fastq2/{1}_*_R1_001.fastq.gz \
-		00_raw/fastq2/{1}_*_R2_001.fastq.gz
-
-    mv ./01_trim_galore/{1}/{1}*_val_1.fq.gz ./01_trim_galore/{1}/{1}_R1.run2.fq.gz
-    mv ./01_trim_galore/{1}/{1}*_val_2.fq.gz ./01_trim_galore/{1}/{1}_R2.run2.fq.gz
-
-	fastqc \
-        -o ./01_trim_galore/{1}/fastqc \
-        -m 1000 \
-		-t 6 \
-        ./01_trim_galore/{1}/{1}_R1.run2.fq.gz \
-        ./01_trim_galore/{1}/{1}_R2.run2.fq.gz
-
 
 	###############################################################################
 	############ Make directories for alignments and align sequences ##############
