@@ -15,7 +15,7 @@ module load gnuparallel/20210222
 
 cd /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/
 
-ref="/project/viper/venom/Taryn/Plestiodon/Pegregius/genome/04_YaHs/Pegre-CLP3001_hifi_hic_scaffold_genome.fasta"
+ref="/project/viper/venom/Taryn/Plestiodon/Pegregius/nextRAD/genome/Pegre-CLP3001_hifi_hic_genome.clean.fa"
 export ref
 
 parallel -a 00_samples_list3.txt -j 4 -k --colsep '\t' 'echo {1} started
