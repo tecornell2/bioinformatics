@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name 02_align_52-60
-#SBATCH --output 02_align_output
+#SBATCH --job-name 02_align_run2
+#SBATCH --output 02_align_run2_output
 #SBATCH --partition nodeviper
 #SBATCH --nodes 1
 #SBATCH --ntasks-per-node 1
