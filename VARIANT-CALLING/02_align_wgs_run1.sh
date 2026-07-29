@@ -13,50 +13,50 @@
 
 set -euo pipefail
 
-module load gnuparallel/20210222
+module load gnuparallel
 
 cd /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/
 
 ref="/project/viper/venom/Taryn/Plestiodon/Pegregius/nextRAD/genome/Pegre-CLP3001_hifi_hic_genome.clean.fa"
 export ref
 
-parallel -a 00_samples_list3.txt -j 2 -k --colsep '\t' 'echo {1} started
+parallel -a 00_samples_list3.txt -j 2 -k 'echo {1} started
 
-	module load anaconda3/2023.09-0
-	source activate bio
-	module load bwa
-	module load samtools
+    module load anaconda3/2023.09-0
+    source activate bio
+    module load bwa
+    module load samtools
 
     ############ align sequences ##############
+    sample={1}
+    trim_dir="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/01_trim_galore/${sample}"
+    mkdir -p /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/02_align/${sample}/
+    cd /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/02_align/${sample}/
 
-	trim_dir="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/01_trim_galore/{1}"
-	mkdir -p /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/02_align/{1}/
-    cd /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/02_align/{1}/
+    trimmed_R1="$trim_dir/${sample}_R1.trim.fq.gz"
+    trimmed_R2="$trim_dir/${sample}_R2.trim.fq.gz"
 
-    trimmed_R1="$trim_dir/{1}_R1.trim.fq.gz"
-    trimmed_R2="$trim_dir/{1}_R2.trim.fq.gz"
-
-    if [ ! -s {1}_aligned_sorted_RG.bam ]; then
-		bwa mem -t 8 \
-			-R $'@RG\tID:{1}_1\tSM:{1}\tLB:{1}_1\tPL:ILLUMINA\tPU:{1}_1' \
-			"$ref" "$trimmed_R1" "$trimmed_R2" 2> {1}_aligned.log | \
-			samtools sort -@ 4 -o {1}_aligned_sorted_RG.bam
+    if [ ! -s "${sample}_aligned_sorted_RG.bam" ]; then
+        bwa mem -t 8 \
+            -R "@RG\tID:${sample}_1\tSM:${sample}\tLB:${sample}_1\tPL:ILLUMINA\tPU:${sample}_1" \
+            "$ref" "$trimmed_R1" "$trimmed_R2" 2> "${sample}_aligned.log" | \
+        samtools sort -@ 4 -o "${sample}_aligned_sorted_RG.bam"
     fi
 
-        ########## mark duplicates ###########
+    ########## mark duplicates ###########
 
-    if [ ! -f {1}_aligned_sorted_marked_RG.bam ]; then
+    if [ ! -f "${sample}_aligned_sorted_marked_RG.bam" ]; then
         picard -Xmx64g MarkDuplicates \
-            -I {1}_aligned_sorted_RG.bam \
-            -O {1}_aligned_sorted_marked_RG.bam \
+            -I "${sample}_aligned_sorted_RG.bam" \
+            -O "${sample}_aligned_sorted_marked_RG.bam" \
             -M metrics.txt
     fi
 
-        ######### stats #########
+    ######### stats #########
 
-    if [ -f {1}_aligned_sorted_marked_RG.bam ]; then
-		samtools stats {1}_aligned_sorted_marked_RG.bam > {1}_aligned_sorted_marked_RG.stats
-		samtools index {1}_aligned_sorted_marked_RG.bam
-	fi
+    if [ -f "${sample}_aligned_sorted_marked_RG.bam" ]; then
+        samtools stats "${sample}_aligned_sorted_marked_RG.bam" > "${sample}_aligned_sorted_marked_RG.stats"
+        samtools index "${sample}_aligned_sorted_marked_RG.bam"
+    fi
 
-echo {1} finished'
+echo ${sample} finished'
