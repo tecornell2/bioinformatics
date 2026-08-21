@@ -170,3 +170,8 @@ do
 echo $i ;
 done`
 ```
+
+#### mosdepth 
+```sh
+for i in */; do sample="${i%/}"; mkdir ${sample}/mosdepth ; cd ${sample}/mosdepth ; echo "start mosdepth for $sample"; input="../${sample}_aligned_sorted_marked_RG.bam"; mosdepth --threads 8 --mapq 20 $sample $input ; done
+```
