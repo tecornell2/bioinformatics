@@ -20,7 +20,9 @@ earlGrey -g test/test.fasta -s test -o test/output_dir -t 8
 ```
 
 ```sh
+# Download root Dfam
  wget https://dfam.org/releases/Dfam_4.0/families/FamDB/dfam40.0.h5.gz
+# make script executable
+chmod +x configure_dfam40.sh 
 ```
-
 
