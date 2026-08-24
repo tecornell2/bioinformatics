@@ -20,9 +20,11 @@ earlGrey -g test/test.fasta -s test -o test/output_dir -t 8
 ```
 
 ```sh
-# Download root Dfam
- wget https://dfam.org/releases/Dfam_4.0/families/FamDB/dfam40.0.h5.gz
 # make script executable
-chmod +x configure_dfam40.sh 
+chmod +x configure_dfam40.sh
+# run interactively
+# script will assist in Dfam download and configuration (for RepeatMasker)
+bash configure_dfam40.sh
+# select root (1)
 ```
 
