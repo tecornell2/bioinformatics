@@ -28,3 +28,13 @@ bash configure_dfam40.sh
 # select root (1)
 ```
 
+```sh
+conda activate earlgrey
+
+FAMDB="$CONDA_PREFIX/share/famdb-3.0.0/Libraries/famdb"
+
+du -sh "$FAMDB"
+find "$FAMDB" -maxdepth 1 -type f -printf '%f\n' | sort
+# check donwloaded partitions are present
+famdb.py -i "$FAMDB" info
+```
