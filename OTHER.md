@@ -175,3 +175,13 @@ done`
 ```sh
 for i in */; do sample="${i%/}"; mkdir -p ${sample}/mosdepth/ ; cd ${sample}/mosdepth/ ; echo "start mosdepth for $sample"; input="../${sample}_aligned_sorted_marked_RG.bam"; mosdepth --threads 8 --mapq 20 $sample $input ; cd ../.. ; done
 ```
+
+#### BEDtools
+```sh
+bedtools getfasta \
+  -fi ${FASTA} \
+  -bed ${GFF} \
+  -s \
+  -name \
+  -fo ${1}_features.fasta
+```
