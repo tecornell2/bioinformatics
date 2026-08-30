@@ -1,10 +1,11 @@
 
-### set up
+### installation
 
 ```sh
 singularity pull --arch amd64 library://remiallio/default/mitofinder:v1.4.2 
 
 ```
+### usage
 
 ```sh
 #!/bin/bash
@@ -64,4 +65,41 @@ parallel -a 00_samples_list4.txt -j 2 '
     echo "Finished {1}"
 '
 
+```
+
+#### extract genes
+```sh
+
+module load gnuparallel
+
+WORK_DIR="/project/viper/venom/Taryn/Plestiodon/Pegregius/mtDNA/MitoFinder"
+export WORK_DIR
+
+parallel -a 00_samples_list.txt -j 2 '
+
+	cd ${WORK_DIR}/{1}
+
+    # identify mitogenome .fasta
+    FASTA=$(find ./ -type f \
+    	\( -name "*_output_mtDNA_contig_1.fasta" \
+		-o -name "*_output_mtDNA_contig.fasta" \) \
+    	-print -quit)
+
+    # else throw error and skip
+    [[ -f "$FASTA" ]] || {
+        echo "No MitoFinder FASTA found for {1}" >&2
+        continue
+    }
+
+    GFF=$(find ./ -type f \
+    	\( -name "*_output_mtDNA_contig_1.gff" \
+		-o -name "*_output_mtDNA_contig.gff" \) \
+    	-print -quit)
+
+	bedtools getfasta \
+	  -fi ${FASTA} \
+ 	 -bed ${GFF} \
+ 	 -s \
+ 	 -name \
+ 	 -fo ${1}_features.fasta
 ```
