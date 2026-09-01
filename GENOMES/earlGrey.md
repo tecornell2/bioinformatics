@@ -37,7 +37,7 @@ find "$FAMDB" -maxdepth 1 -type f -printf '%f\n' | sort
 # check donwloaded partitions are present
 famdb.py -i "$FAMDB" info
 ```
-#### Run Earl Grey
+### Run Earl Grey
 
 ```sh
 #!/bin/sh
