@@ -32,4 +32,4 @@ plink2 \
 
 1. Input VCF File
 2. Transform to data.frame (download RDS to reupload later)
-3. x
+3. Sample QC, SNP QC, SNP Density
