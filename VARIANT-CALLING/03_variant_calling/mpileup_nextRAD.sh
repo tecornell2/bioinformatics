@@ -58,6 +58,8 @@ parallel -a 00_samples_list.txt  -j 5 \
 ### Merge samples
 ### --------------------------------
 
+  cd /project/viper/venom/Taryn/Plestiodon/Pegregius/nextRAD/03_mpileup/variants/
+
   bcftools merge *.vcf.gz \
 	-Oz -o catalog.vcf.gz
 
