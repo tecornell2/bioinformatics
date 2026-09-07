@@ -30,10 +30,12 @@ bioinformatics
 │		└── GENESPACE
 │
 ├── VARIANT-CALLING
-│		├── GATK
-│		├── STACKS
-│		├── ref_map_qaqc
-│		└── vcf_filtering
+│		├── 01_trim
+│		├── 02_align
+│		├── 02_call variant
+│		├── 04_filter
+│		├── STACKS_ref_map_qaqc
+│		└── johnmol_PopGen
 │
 ├── OTHER
 └── SETUP_cmd
