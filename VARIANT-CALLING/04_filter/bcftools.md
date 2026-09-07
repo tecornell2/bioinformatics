@@ -70,6 +70,8 @@ END {
         s, total[s], missing[s], missing[s]/total[s]
 }' | sort -k4,4nr
 
+# sample  total_sites  missing_sites  missing_fraction
+
 ### output
 
 CLPT742	23701989	23695690	0.9997
