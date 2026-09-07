@@ -127,21 +127,3 @@ Outputting VCF file...
 After filtering, kept 860 out of a possible 6972639 Sites **
 
 ##############################################
-
-# bcftools 
-
-bcftools filter -i 'QUAL>20 & DP>5 & DP<30' input.vcf -o filtered.vcf
-
-# DP depth
-# AF allele frequency
-# QUAL
-# F_MISSING fraction of missing genotypes
-
-# Print all samples at sites where at least one sample has DP>5 and DP<30
-bcftools query -f '[%SAMPLE %GT %DP\n]' -i 'FMT/DP>5 | FMT/DP<30' file.vcf
-
-# Print only samples with alternate (non-reference) genotypes
-bcftools query -f'[%CHROM:%POS %SAMPLE %GT\n]' -i'GT="alt"' file.bcf
-
-# Use default string for filtered-out samples
-bcftools query -i 'DP>5' -F '.' -f '[%CHROM\t%POS\t%SAMPLE\t%DP\n]' input.vcf.gz
