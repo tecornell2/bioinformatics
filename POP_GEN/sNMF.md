@@ -16,9 +16,10 @@ Read output .pdf
 ```sh
 Rscript ../../Make_MapMixture_Files2.R *snmfProject 5 popmap_geog_subset.txt
 ```
+
 5. Run plotting script
 ```sh
 Rscript ../../MapMixture3.R Admixture_Dataframe.csv sites_subset.csv -p colors.txt -s site_order.txt --outfile map3 --figure both
 ```
 
-# run5 standard dataset subset for popualtions with 4 indiviudals or more
+run5 standard dataset subset for popualtions with 4 indiviudals or more
