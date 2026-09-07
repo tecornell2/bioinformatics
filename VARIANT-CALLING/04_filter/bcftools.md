@@ -46,10 +46,27 @@ bcftools query -i 'DP>5' -F '.' -f '[%CHROM\t%POS\t%SAMPLE\t%DP\n]' input.vcf.gz
 I rerun the nextRAD mpileup pipeline because the reference genome used was an older assembly. I added a portion in the mpileup script to add additional tags (ex. AF) and keep only SNPs.
 
 ```sh
-# test 1
+# filter pt 1
 bcftools filter -S . -i 'FMT/DP >= 5 & FMT/GQ >= 20' catalog.vcf.gz |  \
   bcftools view -i 'F_MISSING < 0.5' -Oz -o filtered_catalog.GQ-20.minDP-5.F_MISS-50.vcf.gz
 
 # nextRAD:
 # WGS: 10,436,620
+```
+```sh
+# calculate percent missingness per sample
+bcftools filter -S . \
+  -i 'FMT/DP >= 5 & FMT/GQ >= 20' \
+  catalog.vcf.gz -Ou |
+bcftools query -f '[%SAMPLE\t%GT\n]' |
+awk '
+{
+    total[$1]++;
+    if ($2 == "./." || $2 == ".|.") missing[$1]++;
+}
+END {
+    for (s in total)
+        printf "%s\t%d\t%d\t%.4f\n",
+        s, total[s], missing[s], missing[s]/total[s]
+}' | sort -k4,4nr
 ```
