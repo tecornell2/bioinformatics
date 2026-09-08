@@ -15,30 +15,8 @@ vcftools --vcf final.recode.vcf --missing-site
 
 vcftools --vcf final.recode.vcf --het
 ```
+---
 
-```
-# standard Fst
-vcftools --vcf final.recode.vcf \
-  --weir-fst-pop pop_egr.txt \
-  --weir-fst-pop pop_ins.txt \
-  --weir-fst-pop pop_liv.txt \
-  --weir-fst-pop pop_ono.txt  \
-  --weir-fst-pop pop_sim.txt \
-  --out spp_pop
-
-
-
-# sliding window Fst
-vcftools --vcf my_data.vcf \
-  --weir-fst-pop pop1.txt \
-  --weir-fst-pop pop2.txt \
-  --fst-window-size 50000 \
-  --fst-window-step 10000 \
-  --out pop1_vs_pop2_windowed
-```
-
-
-#############################################
 ### April 2026
 STACKS filtering .vcf aligned to ragtaged reference genome
 ```sh
@@ -131,7 +109,7 @@ After filtering, kept 860 out of a possible 6972639 Sites **
 
 ---
 
-### 20260908
+### 20260907
 
 Filtering combined WGS-nextRAD dataset (biallelic SNPs). 
 ```sh
@@ -158,4 +136,13 @@ vcftools --vcf WGS-nextRAD.50indmiss.minDP5.maxDP30.no-out.combined.snps.vcf.gz.
   --thin 150 --recode -\
   -out WGS-nextRAD.50indmiss.minDP5.maxDP30.no-out.thin150.combined.snps.vcf.gz.recode.vcf.recode.vcf 
 # 42163 sites
+```
+
+### 20260908
+```sh
+
+vcftools --vcf WGS-nextRAD.50indmiss.minDP5.maxDP30.no-out.combined.snps.vcf.gz.recode.vcf.recode.vcf \
+  --max-missing 0.75 --recode --out WGS-nextRAD.50indmiss.minDP5.maxDP30.no-out.75geno.combined.snps
+# 203 sites
+
 ```
