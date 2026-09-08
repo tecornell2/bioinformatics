@@ -39,15 +39,13 @@ vcftools --vcf my_data.vcf \
 
 
 #############################################
-## April 2026
-# STACKS filtering .vcf aligned to ragtaged reference genome
-
+### April 2026
+STACKS filtering .vcf aligned to ragtaged reference genome
+```sh
 Extracting indiviudals to remove:
-```awk '$5 > 0.8 {print $1}' out.imiss > remove.txt```
-
-# prior to these I use different filtering schemes
-# review /03_vcf_filtering/run4 for previous filtering
-
+awk '$5 > 0.8 {print $1}' out.imiss > remove.txt
+```
+```sh
 vcftools \
   --vcf *populations.snps.vcf \
   --remove 0.8_missing_and_out.txt \
@@ -65,13 +63,16 @@ vcftools \
   --remove-indels \
   --recode \
   --out final
+```
+---
+### 20260519
 
-#############################################
-## May 19 2026
-# STACKS filtering .vcf aligned to reference genome (hifi only)
+STACKS filtering .vcf aligned to reference genome (hifi only)
 
-## SFS dataset
-# using above step1.vcf to remove singletons (--mac 2) (and no --maf 0.05 )
+#### SFS dataset
+Using above step1.vcf to remove singletons (--mac 2) (and no --maf 0.05 )
+
+```sh
 vcftools \
   --vcf step1.recode.vcf \
   --mac 2 \
@@ -83,12 +84,13 @@ vcftools \
   --out demographic_dataset
 # this dataset can be used for site frequency spectrum, which relies on maf
 # this dataset can be used for sNMF
+```
 
-#############################################
-## June 30 2026
-# STACKS filtering .vcf aligned to reference genome (hifi only)
+---
+### 20260630
+STACKS filtering .vcf aligned to reference genome (hifi only)
 
-
+```sh
 vcftools \
   --vcf populations.snps.vcf \
   --remove 0.75_missing_and_out.txt \
@@ -125,5 +127,4 @@ vcftools \
 ** After filtering, kept 168 out of 168 Individuals
 Outputting VCF file...
 After filtering, kept 860 out of a possible 6972639 Sites **
-
-##############################################
+```
