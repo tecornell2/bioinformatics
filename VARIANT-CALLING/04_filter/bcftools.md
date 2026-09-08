@@ -118,6 +118,7 @@ bcftools view \
   filtered_catalog.GQ-20.minDP-5.F_MISS-50.vcf.gz \
   -Oz -o WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
 # 8555981 sites
+# this snp data is now: biallelic, qual >= 20, depth at all sites > 5x with no sites >50% genotype missingness
 
 bcftools view
   -m2 -M2 -v snps \
@@ -125,6 +126,7 @@ bcftools view
   catalog.snps.0.5missing.vcf.gz -Oz \
   -o nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
 # 72392 sites
+# this snp data is now: biallelic, qual >= 20, depth at all sites > 5x with no sites >50% genotype missingness
 
 # index files
 bcftools index -t WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
