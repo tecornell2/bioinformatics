@@ -33,3 +33,11 @@ plink2 \
 1. Input VCF File
 2. Transform to data.frame (download RDS to reupload later)
 3. Sample QC, SNP QC, SNP Density
+```sh
+Removed SNPs with missing rate > 0.2, MAF < 0.05, heterozygosity rate < 0, and heterozygosity rate > 0.1
+File name: data.frame_23_147583SNPs
+Number of samples: 23
+Number of SNPs: 147583
+Type: data.frame
+```
+4. Population Structure
