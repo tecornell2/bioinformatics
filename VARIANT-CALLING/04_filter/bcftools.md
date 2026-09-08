@@ -95,6 +95,16 @@ bcftools +fill-tags catalog.snps.vcf.gz -Ou -- -t F_MISSING | bcftools view -i '
 ```
 3. Set genotypes to null if depth is not within filter constraints
 
-4. Set genotypes to null for samples with high missingess (from STACKS run) 
+5. Set genotypes to null for samples with high missingess (from STACKS run) 
 
-5. Filter variant sites (again)
+6. Filter variant sites (again)
+
+
+---
+
+```sh
+bcftools filter -Oz -o catalog.snps.0.5missing.meanDP>5.vcf.gz -S . -e 'MEAN(FMT/DP) < 5' catalog.snps.0.5missing.vcf.gz
+# 84088 sites remaining
+# no change
+# deleted file
+```
