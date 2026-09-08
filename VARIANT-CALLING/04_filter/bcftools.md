@@ -91,10 +91,12 @@ CLPT839	23701989	23268977	0.9817
 At this point I reran mpileup two times and went over the SLURM script multiple times. I reviewed the STACKS output and reran the STACKS_pipeline.job to have an updated library to compare to. 
 
 1. Filter variant sites with >= 50% missing genotypes
-`bcftools +fill-tags catalog.snps.vcf.gz -Ou -- -t F_MISSING | bcftools view -i 'F_MISSING<=0.5' -Oz -o catalog.snps.0.5missing.vcf.gz` 
+```sh
+bcftools +fill-tags catalog.snps.vcf.gz -Ou -- -t F_MISSING | bcftools view -i 'F_MISSING<=0.5' -Oz -o catalog.snps.0.5missing.vcf.gz
+# 84088 sites remaining
+```
+3. Set genotypes to null if depth is not within filter constraints
 
-2. Set genotypes to null if depth is not within filter constraints
+4. Set genotypes to null for samples with high missingess (from STACKS run) 
 
-3. Set genotypes to null for samples with high missingess (from STACKS run) 
-
-4. Filter variant sites (again)
+5. Filter variant sites (again)
