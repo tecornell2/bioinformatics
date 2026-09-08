@@ -50,7 +50,7 @@ I rerun the nextRAD mpileup pipeline because the reference genome used was an ol
 bcftools filter -S . -i 'FMT/DP >= 5 & FMT/GQ >= 20' catalog.vcf.gz |  \
   bcftools view -i 'F_MISSING < 0.5' -Oz -o filtered_catalog.GQ-20.minDP-5.F_MISS-50.vcf.gz
 
-# remove any sites were depth is <= 5
+# retain sites were depth is >= 5 and at least 50% of samples have a genotype call
 # nextRAD: 6
 # WGS: 10,436,620
 ```
