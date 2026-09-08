@@ -39,6 +39,7 @@ bcftools query -f'[%CHROM:%POS %SAMPLE %GT\n]' -i'GT="alt"' file.bcf
 bcftools query -i 'DP>5' -F '.' -f '[%CHROM\t%POS\t%SAMPLE\t%DP\n]' input.vcf.gz
 ```
 
+
 ---
 
 ## 20260907
@@ -107,4 +108,65 @@ bcftools filter -Oz -o catalog.snps.0.5missing.meanDP>5.vcf.gz -S . -e 'MEAN(FMT
 # 84088 sites remaining
 # no change
 # deleted file
+```
+
+#### nextRAD-WGS overlap pipeline
+```sh
+bcftools view \
+  -m2 -M2 -v snps \
+  -i 'QUAL>=20 && INFO/DP>=5' \
+  filtered_catalog.GQ-20.minDP-5.F_MISS-50.vcf.gz \
+  -Oz -o WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+# 8555981 sites
+
+bcftools view
+  -m2 -M2 -v snps \
+  -i 'QUAL>=20 && INFO/DP>=5' \
+  catalog.snps.0.5missing.vcf.gz -Oz \
+  -o nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+# 72392 sites
+
+# index files
+bcftools index -t WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+bcftools index -t nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+
+# identify shared sites
+bcftools isec \
+  -n=2 \
+  -c none \
+  -w 1 \
+  WGS*.vcf.gz \
+  nextRAD*.vcf.gz \
+  -Oz -o WGS-nextRAD.overlap.snps.vcf.gz
+# c requires identical REF and ALT alleles
+# w writes csv of inputs
+
+# 62700 sites
+
+bcftools index -t WGS-nextRAD.overlap.snps.vcf.gz
+
+### restrict either dataset to their shared sites
+# make tsv
+bcftools query \
+  -f '%CHROM\t%POS\t%REF\t%ALT\n' \
+  WGS-nextRAD.overlap.snps.vcf.gz > overlap.sites.tsv
+
+# pull out sites
+bcftools view -R overlap.sites.tsv \
+  WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz -Oz -o wgs.overlap.vcf.gz
+
+bcftools view -R overlap.sites.tsv \
+  nextRAD/nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz -Oz -o nextRAD.overlap.vcf.gz
+
+bcftools index -t WGS.overlap.vcf.gz
+bcftools index -t nextRAD.overlap.vcf.gz
+
+# merge datasets
+bcftools merge \
+  wgs.common.vcf.gz \
+  rad.common.vcf.gz \
+  -Oz -o combined.common.vcf.gz
+
+bcftools index -t combined.common.vcf.gz
+
 ```
