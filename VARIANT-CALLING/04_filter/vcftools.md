@@ -128,3 +128,18 @@ vcftools \
 Outputting VCF file...
 After filtering, kept 860 out of a possible 6972639 Sites **
 ```
+
+---
+
+### 20260908
+
+Filtering combined WGS-nextRAD dataset
+```sh
+# removed samples: CLPT247, CLPT685, CLPT843
+
+vcftools --gzvcf WGS-nextRAD.combined.snps.vcf.gz \
+  --remove ./vcftools/WGS-nextRAD.combined.snps/indv_60missingess.txt \
+  --recode --out WGS-nextRAD.50indmiss.combined.snps.vcf.gz
+
+# 203 individuals retained
+```
