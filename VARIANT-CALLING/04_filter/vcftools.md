@@ -155,6 +155,7 @@ vcftools --vcf WGS-nextRAD.50indmiss.minDP5.maxDP30.no-out.combined.snps.vcf.gz.
 ```sh
 # STACKS raw output
   # populations params r = 0.75 min-gt-depth = 5
+  # 558298
 bcftools view -i 'F_MISSING<=0.10 & FMT/DP>=10' -H populations.snps.vcf | wc -l
 # 278505 sites
 
