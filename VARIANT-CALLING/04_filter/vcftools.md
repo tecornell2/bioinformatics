@@ -1,5 +1,7 @@
+# VCFtools
 Source: https://speciationgenomics.github.io/filtering_vcfs/ 
 
+### VCFtools QC
 ```
 vcftools --vcf final.recode.vcf --freq2 --max-alleles 2
 
@@ -17,7 +19,7 @@ vcftools --vcf final.recode.vcf --het
 ```
 ---
 
-### April 2026
+### 202604
 STACKS filtering .vcf aligned to ragtaged reference genome
 ```sh
 Extracting indiviudals to remove:
@@ -145,4 +147,18 @@ vcftools --vcf WGS-nextRAD.50indmiss.minDP5.maxDP30.no-out.combined.snps.vcf.gz.
   --max-missing 0.75 --recode --out WGS-nextRAD.50indmiss.minDP5.maxDP30.no-out.75geno.combined.snps
 # 203 sites
 
+```
+
+---
+
+### 20260909
+```sh
+# STACKS raw output
+  # populations params r = 0.75 min-gt-depth = 5
+bcftools view -i 'F_MISSING<=0.10 & FMT/DP>=10' -H populations.snps.vcf | wc -l
+# 278505 sites
+
+# mpileup
+bcftools view -i 'F_MISSING<=0.10 & FMT/DP>=10' -H catalog.snps.vcf.gz | wc -l
+# 11959 sites
 ```
