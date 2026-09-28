@@ -29,8 +29,72 @@ bcftools mpileup -Ou -f $REF -b $BAMS --threads 16 -a FORMAT/DP \
   | bcftools call -m -v -f GQ --threads 16 -a GQ,GP -Oz -o joint.vcf.gz
 ```
 
+### Stats
+```sh
+
+```
+
+### Pre-merge filtering
+```sh
+cd /project/viper/venom/Taryn/Plestiodon/Pegregius/mpileup/01_input
+
+# filter
+bcftools view \
+  -m2 -M2 -v snps \ # biallelic snps only
+  -i 'QUAL>=20 & INFO/DP>=5' \ # 
+  filtered_catalog.GQ-20.minDP-5.F_MISS-50.vcf.gz \
+  -Oz -o WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+
+bcftools view
+  -m2 -M2 -v snps \
+  -i 'QUAL>=20 & INFO/DP>=5' \
+  catalog.snps.0.5missing.vcf.gz -Oz \
+  -o nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+
+# index files
+bcftools index -t WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+bcftools index -t nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
+```
+
 ### Identify overlap
 
 ```sh
+# identify shared sites
+bcftools isec \
+  -n=2 \
+  -c none \
+  -w 1 \
+  WGS*.vcf.gz \
+  nextRAD*.vcf.gz \
+  -Oz -o WGS-nextRAD.overlap.snps.vcf.gz
+# c requires identical REF and ALT alleles
+# w writes csv of inputs
 
+# 62700 sites
+
+bcftools index -t WGS-nextRAD.overlap.snps.vcf.gz
+
+### restrict either dataset to their shared sites
+# make tsv
+bcftools query \
+  -f '%CHROM\t%POS\t%REF\t%ALT\n' \
+  WGS-nextRAD.overlap.snps.vcf.gz > overlap.sites.tsv
+
+# pull out sites
+bcftools view -R overlap.sites.tsv \
+  WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz -Oz -o wgs.overlap.vcf.gz
+
+bcftools view -R overlap.sites.tsv \
+  nextRAD/nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz -Oz -o nextRAD.overlap.vcf.gz
+
+bcftools index -t WGS.overlap.vcf.gz
+bcftools index -t nextRAD.overlap.vcf.gz
+
+# merge datasets
+bcftools merge \
+  wgs.common.vcf.gz \
+  rad.common.vcf.gz \
+  -Oz -o combined.common.vcf.gz
+
+bcftools index -t combined.common.vcf.gz
 ```
