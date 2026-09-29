@@ -44,17 +44,15 @@ bcftools query -i 'DP>5' -F '.' -f '[%CHROM\t%POS\t%SAMPLE\t%DP\n]' input.vcf.gz
 
 ---
 
-## 20260907
-
-I rerun the nextRAD mpileup pipeline because the reference genome used was an older assembly. I added a portion in the mpileup script to add additional tags (ex. AF) and keep only SNPs.
+## filter scheme notes
 
 ```sh
-# filter pt 1
-bcftools filter -S . -i 'FMT/DP >= 5 & FMT/GQ >= 20' catalog.vcf.gz |  \
-  bcftools view -i 'F_MISSING < 0.5' -Oz -o filtered_catalog.GQ-20.minDP-5.F_MISS-50.vcf.gz
+# add F_MISSING
+bcftools +fill-tags input.vcf.gz -Ou -- -t F_MISSING | bcftools view -Oz -o output_with_f_missing.vcf.gz
 
-# retain sites were depth is >= 5 and at least 50% of samples have a genotype call
-# nextRAD: 6
-# WGS: 10,436,620
+
+bcftools filter -S . -i 'FMT/DP >= 5 & FMT/GQ >= 20' catalog.vcf.gz |  \
+  bcftools view -i 'F_MISSING < 0.5' -Oz -o filtered_catalog.GQ20.minDP5.50F_MISS.vcf.gz
+
 ```
 ---
