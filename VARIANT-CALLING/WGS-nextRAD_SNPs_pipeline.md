@@ -29,9 +29,16 @@ bcftools mpileup -Ou -f $REF -b $BAMS --threads 16 -a FORMAT/DP \
   | bcftools call -m -v -f GQ --threads 16 -a GQ,GP -Oz -o joint.vcf.gz
 ```
 
-### Stats
+### Pre-processing
 ```sh
+bcftools +fill-tags joint.vcf.gz -Ou -- -t F_MISSING | bcftools view -Oz -o joint.tags.vcf.gz
 
+
+bcftools filter
+  -S . -i 'FMT/DP >= 5 & FMT/GQ >= 20' catalog.vcf.gz |  \ # minDP 5 and GQ 20 per sample (else replace genotype call with missing '.')
+  bcftools view -m2 -M2 -v snps \ # biallelic snps only
+  -i 'F_MISSING < 0.5' \ # sites with genotypes in at least 50% population
+  -Oz -o rad.minDP5.GQ20.FMISS50.biallelic.snps.joint.tags.vcf.gz
 ```
 
 ### Pre-merge filtering
@@ -41,7 +48,7 @@ cd /project/viper/venom/Taryn/Plestiodon/Pegregius/mpileup/01_input
 # filter
 bcftools view \
   -m2 -M2 -v snps \ # biallelic snps only
-  -i 'QUAL>=20 & INFO/DP>=5' \ # 
+  -i 'QUAL>=20 & INFO/DP>=5' \ 
   filtered_catalog.GQ-20.minDP-5.F_MISS-50.vcf.gz \
   -Oz -o WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz
 
