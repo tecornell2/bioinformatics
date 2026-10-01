@@ -110,3 +110,8 @@ bcftools index -t combined.common.vcf.gz
 ```sh
     bcftools view -s ^CLPT789,CLPT798,CLPT803,CLPT804 --force-samples -Oz -o wgs-rad.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 ```
+
+### calculate missingness per individial
+```sh
+bcftools stats -s - input.vcf.gz | grep "^PSC" | awk '{print $3, $14}' | sort -k2,2nr
+```
