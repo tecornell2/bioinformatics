@@ -114,4 +114,10 @@ bcftools index -t combined.common.vcf.gz
 ### calculate missingness per individial
 ```sh
 bcftools stats -s - input.vcf.gz | grep "^PSC" | awk '{print $3, $14}' | sort -k2,2nr
+# remove samples if necessary
+```
+
+### extract file sample list
+```sh
+bcftools query -l wgs-rad.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 ```
