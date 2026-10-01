@@ -1,4 +1,4 @@
-### Variant calling
+## Variant calling
 ```sh
 # load package
 module load bcftools
@@ -106,18 +106,29 @@ bcftools merge \
 bcftools index -t combined.common.vcf.gz
 ```
 
-### remove outgroup
+## Filtering
+
+### Remove outgroup
 ```sh
     bcftools view -s ^CLPT789,CLPT798,CLPT803,CLPT804 --force-samples -Oz -o wgs-rad.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 ```
 
-### calculate missingness per individial
+### Calculate missingness per individial
 ```sh
 bcftools stats -s - input.vcf.gz | grep "^PSC" | awk '{print $3, $14}' | sort -k2,2nr
 # remove samples if necessary
 ```
 
-### extract file sample list
+### Extract file sample list
 ```sh
 bcftools query -l wgs-rad.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
+```
+
+### MAF and Pruning
+```sh
+bcftools view -q 0.05:minor input.vcf.gz -O z -o filtered.vcf.gz
+
+bcftools +prune -w 150bp -n 1 -N \
+  rand wgs-rad.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz \
+  -Oz -o wgs-rad.thin150.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz 
 ```
