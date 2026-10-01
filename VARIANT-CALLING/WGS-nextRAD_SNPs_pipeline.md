@@ -108,5 +108,5 @@ bcftools index -t combined.common.vcf.gz
 
 ### remove outgroup
 ```sh
-    bcftools view -Ou -s ^CLP,CLP,CLP,CLP wgs-rad.vcf | bcftools query -f %INFO/AC\t%INFO/AN\n
+    bcftools view -s ^CLPT789,CLPT798,CLPT803,CLPT804 --force-samples -Oz -o wgs-rad.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 ```
