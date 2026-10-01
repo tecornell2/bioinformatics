@@ -105,3 +105,8 @@ bcftools merge \
 
 bcftools index -t combined.common.vcf.gz
 ```
+
+### remove outgroup
+```sh
+    bcftools view -Ou -s ^CLP,CLP,CLP,CLP wgs-rad.vcf | bcftools query -f %INFO/AC\t%INFO/AN\n
+```
