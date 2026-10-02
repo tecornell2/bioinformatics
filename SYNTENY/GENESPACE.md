@@ -23,10 +23,15 @@ cd raw_genomes/
 ../scripts/format_genespace.sh Pgilberti ../working_dir/
 ```
 
-## open R studio
-```sh
-devtools::install_github("jtlovell/GENESPACE")
+### run orthofinder
 
-#library("Biostrings")
-#library("rtracklayer")
+```sh
+module load orthofinder
+orthofinder -f <peptide dir> -t 12 -a 1 -X -o /project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE/working_dir/orthofinder
+```
+
+### open R studio
+
+```sh
+GENESPACE.R
 ```
