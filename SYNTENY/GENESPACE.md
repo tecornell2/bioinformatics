@@ -27,7 +27,9 @@ cd raw_genomes/
 
 ```sh
 module load orthofinder
-orthofinder -f <peptide dir> -t 12 -a 1 -X -o /project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE/working_dir/orthofinder
+
+orthofinder -f <peptide dir> -t 12 -a 1 -X \
+  -o /project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE/working_dir/orthofinder
 ```
 
 ### open R studio
