@@ -1,3 +1,9 @@
+### Contents
+[01 Variant calling](https://github.com/tecornell2/bioinformatics/edit/main/VARIANT-CALLING/WGS-nextRAD_SNPs_pipeline.md#01-snp-variant-calling) - 
+[02 Pre-filter](https://github.com/tecornell2/bioinformatics/edit/main/VARIANT-CALLING/WGS-nextRAD_SNPs_pipeline.md#02-pre-filter-vcfs) - 
+[03 Identify overlap](https://github.com/tecornell2/bioinformatics/edit/main/VARIANT-CALLING/WGS-nextRAD_SNPs_pipeline.md#03-identify-overlapping-snps) - 
+[04 Hard filter](https://github.com/tecornell2/bioinformatics/edit/main/VARIANT-CALLING/WGS-nextRAD_SNPs_pipeline.md#04-hard-filter-final-dataset)
+
 ### 01 SNP variant calling
 ```sh
 # load package
@@ -138,9 +144,22 @@ bcftools +prune -w 150bp -n 1 -N \
 # number of SNPs: 14,098
 ```
 
-#### Visualize with ShiNyP
+### Optional: Visualize with ShiNyP: PCA
 
-##### PCA
+#### WGS vs nextRAD
 
-##### UPGMA
+1 = WGS (n=23) / 2 = nextRAD (n=174)
 
+<img src="14098_PCA_data-type.png" width="600" height="600">
+
+#### Subspecies
+
+1 = similis / 2 = onocrepis / 3 = insularis / 4 = lividus / 5 = egregius
+
+
+<img src="14098_PCA_subspecies.png" width="600" height="600">
+
+
+#### Visualize with ShiNyP: UPGMA (minimal bootstrapping)
+
+https://github.com/tecornell2/bioinformatics/blob/main/VARIANT-CALLING/14098_50lmiss_phylogenTree.pdf 
