@@ -1,4 +1,4 @@
-## Variant calling
+### 01 SNP variant calling
 ```sh
 # load package
 module load bcftools
@@ -7,13 +7,12 @@ module load bcftools
 ### Call nextRAD variants
 ### --------------------------------
 
-# bwa index genome.fasta
 REF="/project/viper/venom/Taryn/Plestiodon/Pegregius/nextRAD/genome/Pegre-CLP3001_hifi_hic_genome.clean.fa"
-
 BAMS="/project/viper/venom/Taryn/Plestiodon/Pegregius/nextRAD/02_align/no_rmdup/00_samples_bam_list.txt"
 
 cd /project/viper/venom/Taryn/Plestiodon/Pegregius/nextRAD/03_mpileup/variants
 
+echo "calling RADseq variants..."
 bcftools mpileup -Ou -f $REF -b $BAMS --threads 8 -a FORMAT/DP \
   | bcftools call -m -v -f GQ --threads 8 -a GQ,GP -Oz -o joint.vcf.gz
 
@@ -25,11 +24,12 @@ BAMS="/project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/02_align/00_samples_ba
 
 cd /project/viper/venom/Taryn/Plestiodon/Pegregius/WGS/03_mpileup/variants
 
+echo "calling WGS variants..."
 bcftools mpileup -Ou -f $REF -b $BAMS --threads 16 -a FORMAT/DP \
   | bcftools call -m -v -f GQ --threads 16 -a GQ,GP -Oz -o joint.vcf.gz
 ```
 
-### Pre-filtering .vcf
+### 02 Pre-filter .vcfs
 ```sh
 # add more tags
 bcftools +fill-tags joint.vcf.gz -Ou -- -t F_MISSING | bcftools view -Oz -o joint.tags.vcf.gz
@@ -39,21 +39,21 @@ bcftools +fill-tags joint.vcf.gz -Ou -- -t F_MISSING | bcftools view -Oz -o join
 ### --------------------------------
 
 bcftools filter
-  -S . -i 'FMT/DP >= 5 & FMT/GQ >= 20' catalog.vcf.gz |  \ # minDP 5 and GQ 20 per sample (else replace genotype call with missing)
+  -S . -i 'FMT/DP >= 5 & FMT/DP <= 35 & FMT/GQ >= 20' joint.tags.vcf.gz |  \ # minDP 5, maxDP 35, GQ 20 per sample (else '.')
   bcftools view -m2 -M2 -v snps \ # biallelic snps only
   -i 'F_MISSING < 0.5' \ # sites with genotypes in at least 50% population
   -Oz -o rad.minDP5.GQ20.FMISS50.biallelic.snps.joint.tags.vcf.gz
+# number of SNPs: 701,038
 
 # repeat with WGS
-# output: wgs.minDP5.GQ20.FMISS50.biallelic.snps.joint.tags.vcf.gz\
+# output: wgs.minDP5.GQ20.FMISS50.biallelic.snps.joint.tags.vcf.gz
 
 # index files
-bcftools index -t wgs.minDP5.GQ20.FMISS50.biallelic.snps.joint.tags.vcf.gz
-bcftools index -t rad.minDP5.GQ20.FMISS50.biallelic.snps.joint.tags.vcf.gz
+bcftools index -t wgs.50FMISS.maxDP35.minDP5.GQ20.biallelic.snps.joint.tags.vcf.gz
+bcftools index -t rad.50FMISS.maxDP35.minDP5.GQ20.biallelic.snps.joint.tags.vcf.gz
 ```
 
-### Identify overlap
-
+### 03 Identify overlapping SNPs
 ```sh
 ### --------------------------------
 ### Identify shared sites
@@ -64,12 +64,15 @@ bcftools isec \
   -c none \ # require identical REF and ALT alleles
   -w 1 \ # write .csv of inputs
   wgs*.vcf.gz \
-  nextRAD*.vcf.gz \
+  rad*.vcf.gz \
   -Oz -o wgs-rad.overlap.snps.vcf.gz
 
 bcftools index -t wgs-rad.overlap.snps.vcf.gz
 
-### restrict either dataset to their shared sites
+### --------------------------------
+### Restrict datasets to identified sites
+### --------------------------------
+
 # make tsv
 bcftools query \
   -f '%CHROM\t%POS\t%REF\t%ALT\n' \
@@ -77,10 +80,10 @@ bcftools query \
 
 # pull out sites
 bcftools view -R overlap.sites.tsv \
-  WGS.snps.0.5missing.qual20.DP5.biallelic.vcf.gz -Oz -o wgs.overlap.vcf.gz
+  wgs.50FMISS.maxDP35.minDP5.GQ20.biallelic.snps.joint.tags.vcf.gz -Oz -o wgs.overlap.vcf.gz
 
 bcftools view -R overlap.sites.tsv \
-  nextRAD.snps.0.5missing.qual20.DP5.biallelic.vcf.gz -Oz -o rad.overlap.vcf.gz
+  rad.50FMISS.maxDP35.minDP5.GQ20.biallelic.snps.joint.tags.vcf.gz -Oz -o rad.overlap.vcf.gz
 
 bcftools index -t wgs.overlap.vcf.gz
 bcftools index -t rad.overlap.vcf.gz
@@ -94,30 +97,36 @@ bcftools index -t rad.overlap.vcf.gz
 bcftools merge \
   wgs.overlap.vcf.gz \
   rad.overlap.vcf.gz \
-  -Oz -o wgs-rad.mpileup.biallelic.snps.vcf.gz
+  -Oz -o wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 
-bcftools index -t wgs-rad.mpileup.biallelic.snps.vcf.gz
+bcftools index -t wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
+
+# wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
+# number of SNPs:	137,812
+
 ```
 
-## Filtering
+### 04 Hard filter final dataset
 
-### Remove outgroup
+#### Remove outgroup
 ```sh
-    bcftools view -s ^CLPT789,CLPT798,CLPT803,CLPT804 --force-samples -Oz -o wgs-rad.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
+bcftools view -s ^CLPT789,CLPT798,CLPT803,CLPT804 --force-samples \
+  -Oz -o wgs-rad.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz \
+  wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 ```
 
-### Calculate missingness per individial
+#### Calculate missingness per individual
 ```sh
 bcftools stats -s - input.vcf.gz | grep "^PSC" | awk '{print $3, $14}' | sort -k2,2nr
 # remove samples if necessary
 ```
 
-### Extract file sample list
+#### Extract file sample list
 ```sh
 bcftools query -l wgs-rad.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 ```
 
-### MAF and Pruning
+#### MAF and pruning (LD)
 ```sh
 bcftools view -q 0.05:minor input.vcf.gz -O z -o filtered.vcf.gz
 
@@ -125,3 +134,7 @@ bcftools +prune -w 150bp -n 1 -N \
   rand wgs-rad.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz \
   -Oz -o wgs-rad.thin150.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz 
 ```
+
+#### Visualize with ShiNyP
+
+
