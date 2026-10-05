@@ -103,6 +103,7 @@ bcftools index -t wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 
 # wgs-rad.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 # number of SNPs:	137,812
+# number of samples: 202
 
 ```
 
