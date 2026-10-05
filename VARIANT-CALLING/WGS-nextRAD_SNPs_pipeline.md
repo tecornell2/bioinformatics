@@ -133,9 +133,14 @@ bcftools view -q 0.05:minor input.vcf.gz -O z -o filtered.vcf.gz
 
 bcftools +prune -w 150bp -n 1 -N \
   rand wgs-rad.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz \
-  -Oz -o wgs-rad.thin150.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz 
+  -Oz -o wgs-rad.thin150.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
+
+# number of SNPs: 14,098
 ```
 
 #### Visualize with ShiNyP
 
+##### PCA
+
+##### UPGMA
 
