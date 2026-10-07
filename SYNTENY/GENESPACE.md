@@ -18,6 +18,16 @@
 ```
 
 ### 2. Format files
+Use `./format_genespace.sh` to format the bed and peptide files. This script uses other scripts (Translate_RARG.py Linearize.py Extract_CDS_v2.py) that you will need to add to your `.bashrc` path.
+
+```sh
+PATH="$PATH:/project/viper/venom/Ramses/bin/RamsesScripts/Extract_CDS/"
+PATH="$PATH:/project/viper/venom/Ramses/bin/RhettGit/Bioinformatics/scripts/"
+PATH="$PATH:/project/viper/venom/Ramses/bin/RamsesScripts/PyScripts/"
+
+export PATH
+```
+
 ```sh
 cd raw_genomes/
 ../scripts/format_genespace.sh Pgilberti ../working_dir/
