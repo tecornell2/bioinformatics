@@ -47,7 +47,7 @@ GENESPACE.R
 
 Documentation: https://github.com/jtlovell/GENESPACE
 
-## Customize Riparian Plots
+#### Customize Riparian Plots
 https://htmlpreview.github.io/?https://github.com/jtlovell/tutorials/blob/main/riparianGuide.html
 
 ---
