@@ -34,7 +34,7 @@ cp /project/viper/venom/Ramses/HiFi/GENESPACE/formatgff2bed.sh .
 cp /project/viper/venom/Ramses/HiFi/GENESPACE/get_genes_gtf.py .
 cp /project/viper/venom/Ramses/HiFi/GENESPACE/gtf_class.py .
 ```
-
+Run `./format_genespace.sh` on each genome. Use a shared prefix for .fasta and .gff files
 ```sh
 cd raw_genomes/
 ../scripts/format_genespace.sh Pgilberti ../working_dir/
