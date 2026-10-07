@@ -1,4 +1,4 @@
-# Genespace
+# GENESPACE
 
 ### 1. Set up a GENESPACE directory on HPC
 ```sh
@@ -45,7 +45,10 @@ GENESPACE.R
 ```
 ---
 
-https://github.com/jtlovell/GENESPACE
+Documentation: https://github.com/jtlovell/GENESPACE
+
+## Customize Riparian Plots
+https://htmlpreview.github.io/?https://github.com/jtlovell/tutorials/blob/main/riparianGuide.html
 
 ---
 
@@ -86,9 +89,6 @@ module load orthofinder/2.5.4
 
 ### MCScanX
 Download separately onto HPC
-
-# Customize Riparian Plots
-https://htmlpreview.github.io/?https://github.com/jtlovell/tutorials/blob/main/riparianGuide.html
 
 # Troubleshooting
 Installing GENESPACE and its dependencies were a long process likely due to the univeristy HPC. Try a few versions of R (I used R/4.4.0) if you cannot download all the dependencies. Use the BiocManager repository for rtracklayers and Biostrings.
