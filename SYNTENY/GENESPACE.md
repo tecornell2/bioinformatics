@@ -27,6 +27,13 @@ PATH="$PATH:/project/viper/venom/Ramses/bin/RamsesScripts/PyScripts/"
 
 export PATH
 ```
+Copy these scripts to your `GENESPACE/scripts` directory:
+```sh
+cp /project/viper/venom/Ramses/HiFi/GENESPACE/format_genespace.sh .
+cp /project/viper/venom/Ramses/HiFi/GENESPACE/formatgff2bed.sh .
+cp /project/viper/venom/Ramses/HiFi/GENESPACE/get_genes_gtf.py .
+cp /project/viper/venom/Ramses/HiFi/GENESPACE/gtf_class.py .
+```
 
 ```sh
 cd raw_genomes/
