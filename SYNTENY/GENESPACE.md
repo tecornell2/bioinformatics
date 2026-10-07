@@ -1,6 +1,6 @@
 # GENESPACE
 
-### 1. Set up a GENESPACE directory on HPC
+### 1. Set up a GENESPACE directory
 ```sh
 ├── output_figures
 ├── raw_genomes
