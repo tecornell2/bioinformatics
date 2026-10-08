@@ -144,7 +144,7 @@ bcftools +prune -w 150bp -n 1 -N \
 # number of SNPs: 14,098
 ```
 
-### Optional: Visualize with ShiNyP: PCA
+### Optional: Visualize with ShiNyP
 
 **Final filtering scheme for data below**: genotype quality score >20, site depth 5-35X for each sample, retained sites with <50% missingness, retained samples with <70% missingness, minor allele freq > 0.05, thin dataset to 1 SNP every 150bp
 
