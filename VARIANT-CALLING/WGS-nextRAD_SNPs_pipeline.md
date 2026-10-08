@@ -146,6 +146,10 @@ bcftools +prune -w 150bp -n 1 -N \
 
 ### Optional: Visualize with ShiNyP: PCA
 
+**Final filtering scheme for data below**: genotype quality score >20, site depth 5-35X for each sample, retained sites with <50% missingness, retained samples with <70% missingness, minor allele freq > 0.05, thin dataset to 1 SNP every 150bp
+
+number of SNPs: 14,098
+
 #### WGS vs nextRAD
 
 1 = WGS (n=23) / 2 = nextRAD (n=174)
