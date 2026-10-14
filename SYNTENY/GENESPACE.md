@@ -80,7 +80,8 @@ path2mcscanx <- "/project/viper/venom/Taryn/bin/MCScanX-1.0.0"
 # do it manually and rerun the script
 
 ### bash terminal command:
-#orthofinder -f <peptide dir> -t 12 -a 1 -X -o /project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE/working_dir/orthofinder
+#orthofinder -f <peptide dir> -t 12 -a 1 -X \
+  # -o /project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE/working_dir/orthofinder
 
 ### --------------------------------
 ### Run GENESPACE
