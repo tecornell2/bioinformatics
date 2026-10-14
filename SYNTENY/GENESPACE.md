@@ -57,7 +57,7 @@ orthofinder -f <peptide dir> -t 12 -a 1 -X \
 #### Clemson.OnDemand/RStudio-Server
 * R v4.4.0
 * CPU cores: two CPU per comparisons (ex. 2 genomes --> 4 comparisons = 4 CPUs) 
-* List of modules to be loaded: orthofinder/2.5.4
+* List of modules to be loaded: orthofinder/2.5.4 (NOT required if Orthofinder was run earlier in terminal)
 
 ```sh
 GENESPACE.R
