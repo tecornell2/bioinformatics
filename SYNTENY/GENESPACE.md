@@ -183,7 +183,7 @@ module load orthofinder/2.5.4
 Download separately onto HPC
 
 # Troubleshooting
-Installing GENESPACE and its dependencies were a long process likely due to the univeristy HPC. Try a few versions of R (I used R/4.4.0) if you cannot download all the dependencies. Use the BiocManager repository for rtracklayers and Biostrings.
+Installing GENESPACE and its dependencies were a long process likely due to the univeristy HPC. Try a few versions of R (I used R/4.4.0) if you cannot download all the dependencies. Use the BiocManager repository for `rtracklayers` and `Biostrings`.
 <p>
 Be sure to allocate enough memory to the job. If Orthofinder is failing, check how many CPUs and RAM is allocated.
 </p>
