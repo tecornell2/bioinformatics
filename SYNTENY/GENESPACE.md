@@ -1,19 +1,21 @@
 # GENESPACE
 
 ### 1. Set up a GENESPACE directory
+
+It is important the the .gff3 and the .fasta files have the same name.
 ```sh
 ├── output_figures
 ├── raw_genomes
 │   ├── Pegregius.fasta
-│   ├── Pegregius.gff
+│   ├── Pegregius.gff3
 │   ├── Pgilberti.fasta
-│   └── Pgilberti.gff
+│   └── Pgilberti.gff3
 ├── scripts
 │   ├── bed
 │   ├── format_genespace.sh
 │   ├── formatgff2bed.sh
 │   ├── get_genes_gtf.py
-│   ├── gtf_class.py
+│   └── gtf_class.py
 └── working_dir
 ```
 
