@@ -10,7 +10,6 @@ It is important the the .gff and the .fasta files have the same name (ie. Pegreg
 │   ├── Pgilberti.fasta
 │   └── Pgilberti.gff
 ├── scripts
-│   ├── bed
 │   ├── format_genespace.sh
 │   ├── formatgff2bed.sh
 │   ├── get_genes_gtf.py
