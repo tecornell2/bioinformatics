@@ -2,14 +2,14 @@
 
 ### 1. Set up a GENESPACE directory
 
-It is important the the .gff3 and the .fasta files have the same name.
+It is important the the .gff and the .fasta files have the same name. The gff files are actually .gff3 files that I changed the suffixes of. 
 ```sh
 ├── output_figures
 ├── raw_genomes
 │   ├── Pegregius.fasta
-│   ├── Pegregius.gff3
+│   ├── Pegregius.gff
 │   ├── Pgilberti.fasta
-│   └── Pgilberti.gff3
+│   └── Pgilberti.gff
 ├── scripts
 │   ├── bed
 │   ├── format_genespace.sh
