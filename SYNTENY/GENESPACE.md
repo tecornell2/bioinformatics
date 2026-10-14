@@ -2,7 +2,7 @@
 
 ### 1. Set up a GENESPACE directory
 
-It is important the the .gff and the .fasta files have the same name. The gff files are actually .gff3 files that I changed the suffixes of. 
+It is important the the .gff and the .fasta files have the same name (ie. Pegregius). The gff files are actually .gff3 files that I changed the suffixes of (It does not matter if you use a .gff or .gff3, but the suffix needs to be .gff)
 ```sh
 ├── output_figures
 ├── raw_genomes
