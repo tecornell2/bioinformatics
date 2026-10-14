@@ -132,7 +132,7 @@ invchr<-data.frame(genome =c(rep("Pegregius",5),rep("Pgilberti",3)),
 
 invchr
 
-
+# save plot as an svg
 ```
 ---
 
