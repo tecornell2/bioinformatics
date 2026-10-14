@@ -61,6 +61,78 @@ orthofinder -f <peptide dir> -t 12 -a 1 -X \
 
 ```sh
 GENESPACE.R
+
+library("Biostrings")
+library("rtracklayer")
+library("GENESPACE")
+
+setwd("/project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE")
+wd <- "/project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE/working_dir"
+path2mcscanx <- "/project/viper/venom/Taryn/bin/MCScanX-1.0.0"
+
+### format tips, fasta must be linearized, and no ":" should be used in the names of the genes
+
+### --------------------------------
+### Run orthofinder
+### --------------------------------
+
+### for some reason orthofinder is not running all the diamond pairwise comparisons
+# do it manually and rerun the script
+
+### bash terminal command:
+#orthofinder -f <peptide dir> -t 12 -a 1 -X -o /project/viper/venom/Taryn/Plestiodon/synteny/GENESPACE/working_dir/orthofinder
+
+### --------------------------------
+### Run GENESPACE
+### --------------------------------
+
+gpar <- init_genespace(
+  wd = wd,
+  path2mcscanx = path2mcscanx,
+  genomeIDs = c("Pegregius","Pgilberti"),
+  nCores=10,
+  ploidy = 1 )
+
+gpar$shellCalls$orthofinder <- "orthofinder"
+gpar$shellCalls$diamond <- "diamond"
+
+out <- run_genespace(gpar, overwrite = T)
+
+### --------------------------------
+### Plot results
+### --------------------------------
+
+## plot base pairs 
+ripd <- plot_riparian(gsParam = gpar,
+                      refGenome = "Pegregius",
+                      useRegions = F,
+                      useOrder= F,
+                      chrLabFontSize=6,
+                      invertTheseChrs = invchr,
+                      syntenyWeight = 0.5,
+                      chrLabFun = function(x) gsub("* scaffold_","",
+                                                   gsub("scaffold","",x),perl = T))
+### plots gene number
+ripd_genes <- plot_riparian(gsParam = gpar,
+                            refGenome = "Pegregius",
+                            chrLabFontSize=9,
+                            invertTheseChrs = invchr,
+                            syntenyWeight = 0.5,
+                            chrLabFun = function(x) gsub("JANXHW0100000","", # query genome substitute
+                                                         gsub("scaffold_","",x),perl = T)) # ref genome substitute
+
+
+### --------------------------------
+### Invert Chrs
+### --------------------------------
+
+invchr<-data.frame(genome =c(rep("Pegregius",5),rep("Pgilberti",3)),
+                   chr = c(paste0("scaffold_",c(4,5,6,7,8)),
+                           paste0("JANXHW0100000",c(11,12,13))))
+
+invchr
+
+
 ```
 ---
 
