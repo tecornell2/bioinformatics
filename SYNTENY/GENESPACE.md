@@ -44,6 +44,7 @@ cd raw_genomes/
 
 ### 3. Run orthofinder
 
+GENESPACE in R will also run Orthofinder (if a compatible version is loaded in), but I could not get it to run in R. So I ran the program in my terminal on Palmetto. 
 ```sh
 module load orthofinder
 
