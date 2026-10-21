@@ -3,6 +3,14 @@
 Other package snippets
 
 ---
+#### NCBI datasets
+```sh
+# download genome and annotation files from NCBI
+source activate ncbi_datasets
+datasets download genome taxon "Acritoscincus duperreyi" --include genome,gtf,gff3,rna
+
+```
+
 #### SRA tools loop for .fastq data
 ```sh
 for i in *
