@@ -24,5 +24,3 @@ source activate sf
 
 Rscript ../../MapMixture3.R Admixture_Dataframe.csv sites_subset.csv -p colors.txt -s site_order.txt --outfile map3 --figure both
 ```
-
-run5 standard dataset subset for popualtions with 4 indiviudals or more
