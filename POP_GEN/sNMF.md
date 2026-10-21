@@ -19,6 +19,9 @@ Rscript ../../Make_MapMixture_Files2.R *snmfProject 5 popmap_geog_subset.txt
 
 5. Run plotting script
 ```sh
+source deactivate
+source activate sf
+
 Rscript ../../MapMixture3.R Admixture_Dataframe.csv sites_subset.csv -p colors.txt -s site_order.txt --outfile map3 --figure both
 ```
 
