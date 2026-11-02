@@ -27,6 +27,16 @@ PATH="$PATH:/project/viper/venom/Ramses/bin/RamsesScripts/PyScripts/"
 
 export PATH
 ```
+
+Create a conda env with BioPython for scripts
+```sh
+# Create a bioinformatics environment
+conda create -n bio # Create an environment named "bio"
+conda activate bio # Activate your "bio" environment
+conda install -y biopython 
+conda deactivate # Deactivate your environment to exit
+```
+
 Copy these scripts to your `GENESPACE/scripts` directory:
 ```sh
 cp /project/viper/venom/Ramses/HiFi/GENESPACE/format_genespace.sh .
