@@ -142,6 +142,8 @@ bcftools +prune -w 150bp -n 1 -N \
   -Oz -o wgs-rad.thin150.maf05.70imiss.no-out.minDP5.maxDP35.GQ20.mpileup.biallelic.snps.vcf.gz
 
 # number of SNPs: 14,098
+
+bcftools +prune -m r2=0.8 -w 100kb -Oz -o output.vcf.gz input.vcf.gz
 ```
 
 ### Optional: Visualize with ShiNyP
