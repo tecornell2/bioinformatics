@@ -8,26 +8,34 @@ bioinformatics
 │	└── chooseGCM
 │
 ├── GENOMES
-│	├── ASSEMBLY-Hi-C
+│	├── ASSEMBLY-HiFi-Hi-C
 │	├── ASSEMBLY-HiFi
-│	├── ANNOTATION-BRAKER
+│	├── GENOME_ANNOTATIONv3
+│	├── ANNOTATION-GALBA
+│	├── ANNOTATION-funannotate
 │	├── ManualCorrections
+│	├── MitoFinder
+│	├── MitoHiFi
 │	├── PretextMap_PretextView
 │	├── RagTag
 │	├── blobtools_SnailPlot
+│	├── earlGrey
+│	├── tidk
 │	└── scripts
 │	 	├── chr_plot_order.py
 │		└── chr_plot_relative_size.py
 │
 ├── POP_GEN
 │	├── EEMS
+│	├── EEMS_plot
 │	├── RADseq_qaqc
 │	├── easySFS
 │	└── sNMF
 │
 ├── SYNTENY
 │	├── asynt
-│	└── GENESPACE
+│	├── GENESPACE
+│	└── Synk
 │
 ├── VARIANT-CALLING
 │	├── 01_trim
@@ -35,6 +43,7 @@ bioinformatics
 │	├── 03_call variant
 │	├── 04_filter
 │	├── STACKS_ref_map_qaqc
+│	├── WGS-nextRAD_SNPs_pipeline
 │	└── johnmol_PopGen
 │
 ├── OTHER
