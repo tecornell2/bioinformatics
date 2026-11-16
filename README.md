@@ -4,8 +4,8 @@
 bioinformatics
 │
 ├── CLIMATE
-│		├── BioClim
-│		└── chooseGCM
+│	├── BioClim
+│	└── chooseGCM
 │
 ├── GENOMES
 │		├── ASSEMBLY-Hi-C
